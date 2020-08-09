@@ -379,10 +379,10 @@ private:
                  std::error_code& ec) override
     {
         std::basic_string<typename To::char_type> target;
-        auto result = unicons::convert(name.begin(),name.end(),std::back_inserter(target),unicons::conv_flags::strict);
-        if (result.ec != unicons::conv_errc())
+        auto res = unicons::convert(name.begin(),name.end(),std::back_inserter(target),unicons::conv_flags::strict);
+        if (res.ec != unicons::conv_errc())
         {
-            ec = result.ec;
+            ec = res.ec;
         }
         return destination().key(target, context, ec);
     }
@@ -393,10 +393,10 @@ private:
                       std::error_code& ec) override
     {
         std::basic_string<typename To::char_type> target;
-        auto result = unicons::convert(value.begin(),value.end(),std::back_inserter(target),unicons::conv_flags::strict);
-        if (result.ec != unicons::conv_errc())
+        auto res = unicons::convert(value.begin(),value.end(),std::back_inserter(target),unicons::conv_flags::strict);
+        if (res.ec != unicons::conv_errc())
         {
-            JSONCONS_THROW(ser_error(result.ec));
+            JSONCONS_THROW(ser_error(res.ec));
         }
         return destination().string_value(target, tag, context, ec);
     }

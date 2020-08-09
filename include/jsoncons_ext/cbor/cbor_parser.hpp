@@ -443,8 +443,8 @@ private:
                 {
                     return;
                 }
-                auto result = unicons::validate(text_buffer_.begin(),text_buffer_.end());
-                if (result.ec != unicons::conv_errc())
+                auto res = unicons::validate(text_buffer_.begin(),text_buffer_.end());
+                if (res.ec != unicons::conv_errc())
                 {
                     ec = cbor_errc::invalid_utf8_text_string;
                     more_ = false;
@@ -1060,7 +1060,7 @@ private:
         return val;
     }
 
-    void read_decimal_fraction(string_type& result, std::error_code& ec)
+    void read_decimal_fraction(string_type& res, std::error_code& ec)
     {
         std::size_t size = get_size(ec);
         if (!more_)
@@ -1203,12 +1203,12 @@ private:
         {
             if (s[0] == '-')
             {
-                result.push_back('-');
-                jsoncons::detail::prettify_string(s.c_str()+1, s.size()-1, (int)exponent, -4, 17, result);
+                res.push_back('-');
+                jsoncons::detail::prettify_string(s.c_str()+1, s.size()-1, (int)exponent, -4, 17, res);
             }
             else
             {
-                jsoncons::detail::prettify_string(s.c_str(), s.size(), (int)exponent, -4, 17, result);
+                jsoncons::detail::prettify_string(s.c_str(), s.size(), (int)exponent, -4, 17, res);
             }
         }
         else

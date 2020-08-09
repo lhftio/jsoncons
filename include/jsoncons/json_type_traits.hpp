@@ -476,19 +476,19 @@ namespace detail {
 
         static bool is(const Json& j) noexcept
         {
-            bool result = j.is_array();
-            if (result)
+            bool res = j.is_array();
+            if (res)
             {
                 for (auto e : j.array_range())
                 {
                     if (!e.template is<value_type>())
                     {
-                        result = false;
+                        res = false;
                         break;
                     }
                 }
             }
-            return result;
+            return res;
         }
 
         // array back insertable non-byte container
@@ -499,14 +499,14 @@ namespace detail {
         {
             if (j.is_array())
             {
-                T result;
-                visit_reserve_(typename std::integral_constant<bool, jsoncons::detail::has_reserve<T>::value>::type(),result,j.size());
+                T res;
+                visit_reserve_(typename std::integral_constant<bool, jsoncons::detail::has_reserve<T>::value>::type(),res,j.size());
                 for (const auto& item : j.array_range())
                 {
-                    result.push_back(item.template as<value_type>());
+                    res.push_back(item.template as<value_type>());
                 }
 
-                return result;
+                return res;
             }
             else 
             {
@@ -524,14 +524,14 @@ namespace detail {
             std::error_code ec;
             if (j.is_array())
             {
-                T result;
-                visit_reserve_(typename std::integral_constant<bool, jsoncons::detail::has_reserve<T>::value>::type(),result,j.size());
+                T res;
+                visit_reserve_(typename std::integral_constant<bool, jsoncons::detail::has_reserve<T>::value>::type(),res,j.size());
                 for (const auto& item : j.array_range())
                 {
-                    result.push_back(item.template as<value_type>());
+                    res.push_back(item.template as<value_type>());
                 }
 
-                return result;
+                return res;
             }
             else if (j.is_byte_string_view())
             {
@@ -629,32 +629,32 @@ namespace detail {
 
         static bool is(const Json& j) noexcept
         {
-            bool result = j.is_array();
-            if (result)
+            bool res = j.is_array();
+            if (res)
             {
                 for (auto e : j.array_range())
                 {
                     if (!e.template is<value_type>())
                     {
-                        result = false;
+                        res = false;
                         break;
                     }
                 }
             }
-            return result;
+            return res;
         }
 
         static T as(const Json& j)
         {
             if (j.is_array())
             {
-                T result;
+                T res;
                 for (const auto& item : j.array_range())
                 {
-                    result.insert(item.template as<value_type>());
+                    res.insert(item.template as<value_type>());
                 }
 
-                return result;
+                return res;
             }
             else 
             {
@@ -706,35 +706,35 @@ namespace detail {
 
         static bool is(const Json& j) noexcept
         {
-            bool result = j.is_array();
-            if (result)
+            bool res = j.is_array();
+            if (res)
             {
                 for (auto e : j.array_range())
                 {
                     if (!e.template is<value_type>())
                     {
-                        result = false;
+                        res = false;
                         break;
                     }
                 }
             }
-            return result;
+            return res;
         }
 
         static T as(const Json& j)
         {
             if (j.is_array())
             {
-                T result;
+                T res;
 
                 auto it = j.array_range().rbegin();
                 auto end = j.array_range().rend();
                 for (; it != end; ++it)
                 {
-                    result.push_front((*it).template as<value_type>());
+                    res.push_front((*it).template as<value_type>());
                 }
 
-                return result;
+                return res;
             }
             else 
             {
@@ -782,19 +782,19 @@ namespace detail {
 
         static bool is(const Json& j) noexcept
         {
-            bool result = j.is_array() && j.size() == N;
-            if (result)
+            bool res = j.is_array() && j.size() == N;
+            if (res)
             {
                 for (auto e : j.array_range())
                 {
                     if (!e.template is<value_type>())
                     {
-                        result = false;
+                        res = false;
                         break;
                     }
                 }
             }
-            return result;
+            return res;
         }
 
         static std::array<E, N> as(const Json& j)
@@ -848,15 +848,15 @@ namespace detail {
 
         static bool is(const Json& j) noexcept
         {
-            bool result = j.is_object();
+            bool res = j.is_object();
             for (auto member : j.object_range())
             {
                 if (!member.value().template is<mapped_type>())
                 {
-                    result = false;
+                    res = false;
                 }
             }
-            return result;
+            return res;
         }
 
         static T as(const Json& j)
@@ -865,13 +865,13 @@ namespace detail {
             {
                 JSONCONS_THROW(ser_error(convert_errc::not_map));
             }
-            T result;
+            T res;
             for (const auto& item : j.object_range())
             {
-                result.emplace(key_type(item.key().data(),item.key().size()), item.value().template as<mapped_type>());
+                res.emplace(key_type(item.key().data(),item.key().size()), item.value().template as<mapped_type>());
             }
 
-            return result;
+            return res;
         }
 
         static Json to_json(const T& val)
@@ -922,15 +922,15 @@ namespace detail {
 
         static T as(const Json& val) 
         {
-            T result;
+            T res;
             for (const auto& item : val.object_range())
             {
                 Json j(item.key());
                 auto key = json_type_traits<Json,key_type>::as(j);
-                result.emplace(std::move(key), item.value().template as<mapped_type>());
+                res.emplace(std::move(key), item.value().template as<mapped_type>());
             }
 
-            return result;
+            return res;
         }
 
         static Json to_json(const T& val) 
@@ -1275,19 +1275,19 @@ namespace detail {
 
         static bool is(const Json& j) noexcept
         {
-            bool result = j.is_array();
-            if (result)
+            bool res = j.is_array();
+            if (res)
             {
                 for (auto e : j.array_range())
                 {
                     if (!e.template is<T>())
                     {
-                        result = false;
+                        res = false;
                         break;
                     }
                 }
             }
-            return result;
+            return res;
         }
         
         static std::valarray<T> as(const Json& j)
@@ -1571,12 +1571,12 @@ namespace variant_detail
                     case semantic_tag::epoch_milli:
                     {
                         auto sv = j.as_string_view();
-                        auto result = jsoncons::detail::to_integer_decimal<Rep>(sv.data(), sv.size());
-                        if (!result)
+                        auto res = jsoncons::detail::to_integer_decimal<Rep>(sv.data(), sv.size());
+                        if (!res)
                         {
                             return duration_type();
                         }
-                        return duration_type(result.value());
+                        return duration_type(res.value());
                     }
                     case semantic_tag::epoch_nano:
                     {

@@ -101,9 +101,9 @@ const std::error_category& jsonpointer_error_category()
 }
 
 inline 
-std::error_code make_error_code(jsonpointer_errc result)
+std::error_code make_error_code(jsonpointer_errc res)
 {
-    return std::error_code(static_cast<int>(result),jsonpointer_error_category());
+    return std::error_code(static_cast<int>(res),jsonpointer_error_category());
 }
 
 }}

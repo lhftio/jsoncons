@@ -386,14 +386,14 @@ private:
             case staj_event_type::key:
             case staj_event_type::string_value:
             {
-                auto result = jsoncons::detail::to_integer<int64_t>(value_.string_data_, length_);
-                if (!result)
+                auto res = jsoncons::detail::to_integer<int64_t>(value_.string_data_, length_);
+                if (!res)
                 {
                     ec = convert_errc::not_signed_integer;
                 }
                 else
                 {
-                    value = result.value();
+                    value = res.value();
                 }
                 break;
             }
@@ -424,14 +424,14 @@ private:
             case staj_event_type::key:
             case staj_event_type::string_value:
             {
-                auto result = jsoncons::detail::to_integer<uint64_t>(value_.string_data_, length_);
-                if (!result)
+                auto res = jsoncons::detail::to_integer<uint64_t>(value_.string_data_, length_);
+                if (!res)
                 {
                     ec = convert_errc::not_unsigned_integer;
                 }
                 else
                 {
-                    value = result.value();
+                    value = res.value();
                 }
                 break;
             }

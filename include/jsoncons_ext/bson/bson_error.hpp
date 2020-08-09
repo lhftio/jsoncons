@@ -76,9 +76,9 @@ const std::error_category& bson_error_category()
 }
 
 inline 
-std::error_code make_error_code(bson_errc result)
+std::error_code make_error_code(bson_errc res)
 {
-    return std::error_code(static_cast<int>(result),bson_error_category());
+    return std::error_code(static_cast<int>(res),bson_error_category());
 }
 
 

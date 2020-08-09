@@ -29,7 +29,7 @@ namespace jsoncons {
     namespace detail {
     template <class InputIt, class Container>
     typename std::enable_if<std::is_same<typename std::iterator_traits<InputIt>::value_type,uint8_t>::value,size_t>::type
-    encode_base64_generic(InputIt first, InputIt last, const char alphabet[65], Container& result)
+    encode_base64_generic(InputIt first, InputIt last, const char alphabet[65], Container& res)
     {
         std::size_t count = 0;
         unsigned char a3[3];
@@ -50,7 +50,7 @@ namespace jsoncons {
 
                 for (i = 0; i < 4; i++) 
                 {
-                    result.push_back(alphabet[a4[i]]);
+                    res.push_back(alphabet[a4[i]]);
                     ++count;
                 }
                 i = 0;
@@ -70,7 +70,7 @@ namespace jsoncons {
 
             for (j = 0; j < i + 1; ++j) 
             {
-                result.push_back(alphabet[a4[j]]);
+                res.push_back(alphabet[a4[j]]);
                 ++count;
             }
 
@@ -78,7 +78,7 @@ namespace jsoncons {
             {
                 while (i++ < 3) 
                 {
-                    result.push_back(fill);
+                    res.push_back(fill);
                     ++count;
                 }
             }
@@ -92,7 +92,7 @@ namespace jsoncons {
     decode_base64_generic(InputIt first, InputIt last, 
                           const uint8_t reverse_alphabet[256],
                           F f,
-                          Container& result)
+                          Container& res)
     {
         uint8_t a4[4], a3[3];
         uint8_t i = 0;
@@ -119,7 +119,7 @@ namespace jsoncons {
 
                 for (i = 0; i < 3; i++) 
                 {
-                    result.push_back(a3[i]);
+                    res.push_back(a3[i]);
                 }
                 i = 0;
             }
@@ -137,7 +137,7 @@ namespace jsoncons {
 
             for (j = 0; j < i - 1; ++j) 
             {
-                result.push_back(a3[j]);
+                res.push_back(a3[j]);
             }
         }
     }
@@ -146,39 +146,39 @@ namespace jsoncons {
 
     template <class InputIt, class Container>
     typename std::enable_if<std::is_same<typename std::iterator_traits<InputIt>::value_type,uint8_t>::value,size_t>::type
-    encode_base16(InputIt first, InputIt last, Container& result)
+    encode_base16(InputIt first, InputIt last, Container& res)
     {
         static constexpr char characters[] = "0123456789ABCDEF";
 
         for (auto it = first; it != last; ++it)
         {
             uint8_t c = *it;
-            result.push_back(characters[c >> 4]);
-            result.push_back(characters[c & 0xf]);
+            res.push_back(characters[c >> 4]);
+            res.push_back(characters[c & 0xf]);
         }
         return (last-first)*2;
     }
 
     template <class InputIt, class Container>
     typename std::enable_if<std::is_same<typename std::iterator_traits<InputIt>::value_type,uint8_t>::value,size_t>::type
-    encode_base64url(InputIt first, InputIt last, Container& result)
+    encode_base64url(InputIt first, InputIt last, Container& res)
     {
         static constexpr char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                                       "abcdefghijklmnopqrstuvwxyz"
                                                       "0123456789-_"
                                                       "\0";
-        return detail::encode_base64_generic(first, last, alphabet, result);
+        return detail::encode_base64_generic(first, last, alphabet, res);
     }
 
     template <class InputIt, class Container>
     typename std::enable_if<std::is_same<typename std::iterator_traits<InputIt>::value_type,uint8_t>::value,size_t>::type
-    encode_base64(InputIt first, InputIt last, Container& result)
+    encode_base64(InputIt first, InputIt last, Container& res)
     {
         static constexpr char alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                                    "abcdefghijklmnopqrstuvwxyz"
                                                    "0123456789+/"
                                                    "=";
-        return detail::encode_base64_generic(first, last, alphabet, result);
+        return detail::encode_base64_generic(first, last, alphabet, res);
     }
 
     template <class Char>
@@ -203,7 +203,7 @@ namespace jsoncons {
 
     template <class InputIt, class Container>
     typename std::enable_if<jsoncons::detail::is_back_insertable_byte_container<Container>::value,void>::type 
-    decode_base64url(InputIt first, InputIt last, Container& result)
+    decode_base64url(InputIt first, InputIt last, Container& res)
     {
         static constexpr uint8_t reverse_alphabet[256] = {
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -227,12 +227,12 @@ namespace jsoncons {
         
         jsoncons::detail::decode_base64_generic(first, last, reverse_alphabet, 
                                                 is_base64url<typename std::iterator_traits<InputIt>::value_type>, 
-                                                result);
+                                                res);
     }
 
     template <class InputIt, class Container>
     typename std::enable_if<jsoncons::detail::is_back_insertable_byte_container<Container>::value,void>::type 
-    decode_base64(InputIt first, InputIt last, Container& result)
+    decode_base64(InputIt first, InputIt last, Container& res)
     {
         static constexpr uint8_t reverse_alphabet[256] = {
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -254,12 +254,12 @@ namespace jsoncons {
         };
         jsoncons::detail::decode_base64_generic(first, last, reverse_alphabet, 
                                                 is_base64<typename std::iterator_traits<InputIt>::value_type>, 
-                                                result);
+                                                res);
     }
 
     template <class InputIt,class Container>
     typename std::enable_if<jsoncons::detail::is_back_insertable_byte_container<Container>::value,void>::type 
-    decode_base16(InputIt first, InputIt last, Container& result)
+    decode_base16(InputIt first, InputIt last, Container& res)
     {
         std::size_t len = std::distance(first,last);
         if (len & 1) 
@@ -299,7 +299,7 @@ namespace jsoncons {
                 JSONCONS_THROW(json_runtime_error<std::invalid_argument>("Not a hex digit. Cannot decode encoded base16 string"));
             }
 
-            result.push_back(val);
+            res.push_back(val);
         }
     }
 

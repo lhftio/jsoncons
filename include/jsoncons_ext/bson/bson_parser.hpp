@@ -261,8 +261,8 @@ private:
         }
         if (type == jsoncons::bson::detail::bson_container_type::document)
         {
-            auto result = unicons::validate(text_buffer_.begin(),text_buffer_.end());
-            if (result.ec != unicons::conv_errc())
+            auto res = unicons::validate(text_buffer_.begin(),text_buffer_.end());
+            if (res.ec != unicons::conv_errc())
             {
                 ec = bson_errc::invalid_utf8_text_string;
                 more_ = false;
@@ -321,8 +321,8 @@ private:
                     more_ = false;
                     return;
                 }
-                auto result = unicons::validate(s.begin(),s.end());
-                if (result.ec != unicons::conv_errc())
+                auto res = unicons::validate(s.begin(),s.end());
+                if (res.ec != unicons::conv_errc())
                 {
                     ec = bson_errc::invalid_utf8_text_string;
                     more_ = false;

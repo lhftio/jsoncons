@@ -68,9 +68,9 @@ const std::error_category& csv_error_category()
 }
 
 inline 
-std::error_code make_error_code(csv_errc result)
+std::error_code make_error_code(csv_errc res)
 {
-    return std::error_code(static_cast<int>(result),csv_error_category());
+    return std::error_code(static_cast<int>(res),csv_error_category());
 }
 
 }}

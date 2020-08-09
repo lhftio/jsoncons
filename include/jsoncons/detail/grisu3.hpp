@@ -302,9 +302,9 @@ bool grisu3(double v, char *buffer, int *length, int *K)
     diy_fp_t Wp = multiply(w_p, c_mk);
     diy_fp_t Wm = multiply(w_m, c_mk);
     *K = -mk;
-    bool result = digit_gen(Wm, W, Wp, buffer, length, K);
+    bool res = digit_gen(Wm, W, Wp, buffer, length, K);
     buffer[*length] = 0;
-    return result;
+    return res;
 }
 
 }} // namespace detail namespace jsoncons 

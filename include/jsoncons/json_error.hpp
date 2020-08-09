@@ -130,9 +130,9 @@ namespace jsoncons {
     }
 
     inline 
-    std::error_code make_error_code(json_errc result)
+    std::error_code make_error_code(json_errc res)
     {
-        return std::error_code(static_cast<int>(result),json_error_category());
+        return std::error_code(static_cast<int>(res),json_error_category());
     }
 
 #if !defined(JSONCONS_NO_DEPRECATED)

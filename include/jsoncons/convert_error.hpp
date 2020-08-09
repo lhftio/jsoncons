@@ -103,9 +103,9 @@ const std::error_category& convert_error_category()
 }
 
 inline 
-std::error_code make_error_code(convert_errc result)
+std::error_code make_error_code(convert_errc res)
 {
-    return std::error_code(static_cast<int>(result),convert_error_category());
+    return std::error_code(static_cast<int>(res),convert_error_category());
 }
 
 }

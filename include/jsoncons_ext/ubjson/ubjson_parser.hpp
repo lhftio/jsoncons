@@ -444,8 +444,8 @@ private:
                     return;
                 }
                 char c = jsoncons::detail::big_to_native<char>(buf, sizeof(buf));
-                auto result = unicons::validate(&c,&c+1);
-                if (result.ec != unicons::conv_errc())
+                auto res = unicons::validate(&c,&c+1);
+                if (res.ec != unicons::conv_errc())
                 {
                     ec = ubjson_errc::invalid_utf8_text_string;
                     more_ = false;
@@ -468,8 +468,8 @@ private:
                     more_ = false;
                     return;
                 }
-                auto result = unicons::validate(text_buffer_.begin(),text_buffer_.end());
-                if (result.ec != unicons::conv_errc())
+                auto res = unicons::validate(text_buffer_.begin(),text_buffer_.end());
+                if (res.ec != unicons::conv_errc())
                 {
                     ec = ubjson_errc::invalid_utf8_text_string;
                     more_ = false;
@@ -853,8 +853,8 @@ private:
             return;
         }
 
-        auto result = unicons::validate(text_buffer_.begin(),text_buffer_.end());
-        if (result.ec != unicons::conv_errc())
+        auto res = unicons::validate(text_buffer_.begin(),text_buffer_.end());
+        if (res.ec != unicons::conv_errc())
         {
             ec = ubjson_errc::invalid_utf8_text_string;
             more_ = false;

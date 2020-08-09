@@ -177,25 +177,25 @@ enum class pointer_state
     template <class CharT>
     std::basic_string<CharT> escape_string(const std::basic_string<CharT>& s)
     {
-        std::basic_string<CharT> result;
+        std::basic_string<CharT> res;
         for (auto c : s)
         {
             switch (c)
             {
                 case '~':
-                    result.push_back('~');
-                    result.push_back('0');
+                    res.push_back('~');
+                    res.push_back('0');
                     break;
                 case '/':
-                    result.push_back('~');
-                    result.push_back('1');
+                    res.push_back('~');
+                    res.push_back('1');
                     break;
                 default:
-                    result.push_back(c);
+                    res.push_back(c);
                     break;
             }
         }
-        return result;
+        return res;
     }
 
     // basic_json_ptr
@@ -433,13 +433,13 @@ enum class pointer_state
                         ec = jsonpointer_errc::invalid_index;
                         return;
                     }
-                    auto result = jsoncons::detail::to_integer<std::size_t>(buffer_.data(), buffer_.length());
-                    if (!result)
+                    auto res = jsoncons::detail::to_integer<std::size_t>(buffer_.data(), buffer_.length());
+                    if (!res)
                     {
                         ec = jsonpointer_errc::invalid_index;
                         return;
                     }
-                    std::size_t index = result.value();
+                    std::size_t index = res.value();
                     if (index > current_.back().get().size())
                     {
                         ec = jsonpointer_errc::index_exceeds_array_size;
@@ -486,13 +486,13 @@ enum class pointer_state
                         ec = jsonpointer_errc::invalid_index;
                         return;
                     }
-                    auto result = jsoncons::detail::to_integer<std::size_t>(buffer_.data(), buffer_.length());
-                    if (!result)
+                    auto res = jsoncons::detail::to_integer<std::size_t>(buffer_.data(), buffer_.length());
+                    if (!res)
                     {
                         ec = jsonpointer_errc::invalid_index;
                         return;
                     }
-                    std::size_t index = result.value();
+                    std::size_t index = res.value();
                     if (index > current_.back().get().size())
                     {
                         ec = jsonpointer_errc::index_exceeds_array_size;
@@ -548,13 +548,13 @@ enum class pointer_state
                         ec = jsonpointer_errc::invalid_index;
                         return;
                     }
-                    auto result = jsoncons::detail::to_integer<std::size_t>(buffer_.data(), buffer_.length());
-                    if (!result)
+                    auto res = jsoncons::detail::to_integer<std::size_t>(buffer_.data(), buffer_.length());
+                    if (!res)
                     {
                         ec = jsonpointer_errc::invalid_index;
                         return;
                     }
-                    std::size_t index = result.value();
+                    std::size_t index = res.value();
                     if (index >= current_.back().get().size())
                     {
                         ec = jsonpointer_errc::index_exceeds_array_size;
@@ -603,13 +603,13 @@ enum class pointer_state
                         ec = jsonpointer_errc::invalid_index;
                         return;
                     }
-                    auto result = jsoncons::detail::to_integer<std::size_t>(buffer_.data(), buffer_.length());
-                    if (!result)
+                    auto res = jsoncons::detail::to_integer<std::size_t>(buffer_.data(), buffer_.length());
+                    if (!res)
                     {
                         ec = jsonpointer_errc::invalid_index;
                         return;
                     }
-                    std::size_t index = result.value();
+                    std::size_t index = res.value();
                     if (index >= current_.back().get().size())
                     {
                         ec = jsonpointer_errc::index_exceeds_array_size;
@@ -677,13 +677,13 @@ enum class pointer_state
                         ec = jsonpointer_errc::invalid_index;
                         return;
                     }
-                    auto result = jsoncons::detail::to_integer<std::size_t>(buffer.data(), buffer.length());
-                    if (!result)
+                    auto res = jsoncons::detail::to_integer<std::size_t>(buffer.data(), buffer.length());
+                    if (!res)
                     {
                         ec = jsonpointer_errc::invalid_index;
                         return;
                     }
-                    std::size_t index = result.value();
+                    std::size_t index = res.value();
                     if (index >= current.back().get().size())
                     {
                         ec = jsonpointer_errc::index_exceeds_array_size;
@@ -884,23 +884,23 @@ enum class pointer_state
 
     template <class String,class Result>
     typename std::enable_if<std::is_convertible<typename String::value_type,typename Result::value_type>::value>::type
-    escape(const String& s, Result& result)
+    escape(const String& s, Result& res)
     {
         for (auto c : s)
         {
             if (c == '~')
             {
-                result.push_back('~');
-                result.push_back('0');
+                res.push_back('~');
+                res.push_back('0');
             }
             else if (c == '/')
             {
-                result.push_back('~');
-                result.push_back('1');
+                res.push_back('~');
+                res.push_back('1');
             }
             else
             {
-                result.push_back(c);
+                res.push_back(c);
             }
         }
     }
@@ -908,26 +908,26 @@ enum class pointer_state
     template <class CharT>
     std::basic_string<CharT> escape(const jsoncons::basic_string_view<CharT>& s)
     {
-        std::basic_string<CharT> result;
+        std::basic_string<CharT> res;
 
         for (auto c : s)
         {
             if (c == '~')
             {
-                result.push_back('~');
-                result.push_back('0');
+                res.push_back('~');
+                res.push_back('0');
             }
             else if (c == '/')
             {
-                result.push_back('~');
-                result.push_back('1');
+                res.push_back('~');
+                res.push_back('1');
             }
             else
             {
-                result.push_back(c);
+                res.push_back(c);
             }
         }
-        return result;
+        return res;
     }
 
     // flatten
@@ -935,7 +935,7 @@ enum class pointer_state
     template<class Json>
     void flatten_(const std::basic_string<typename Json::char_type>& parent_key,
                   const Json& parent_value,
-                  Json& result)
+                  Json& res)
     {
         using char_type = typename Json::char_type;
         using string_type = std::basic_string<char_type>;
@@ -947,7 +947,7 @@ enum class pointer_state
                 if (parent_value.empty())
                 {
                     // Flatten empty array to null
-                    result.try_emplace(parent_key, null_type{});
+                    res.try_emplace(parent_key, null_type{});
                 }
                 else
                 {
@@ -956,7 +956,7 @@ enum class pointer_state
                         string_type key(parent_key);
                         key.push_back('/');
                         jsoncons::detail::write_integer(i,key);
-                        flatten_(key, parent_value.at(i), result);
+                        flatten_(key, parent_value.at(i), res);
                     }
                 }
                 break;
@@ -967,7 +967,7 @@ enum class pointer_state
                 if (parent_value.empty())
                 {
                     // Flatten empty object to null
-                    result.try_emplace(parent_key, null_type{});
+                    res.try_emplace(parent_key, null_type{});
                 }
                 else
                 {
@@ -976,7 +976,7 @@ enum class pointer_state
                         string_type key(parent_key);
                         key.push_back('/');
                         escape(jsoncons::basic_string_view<char_type>(item.key().data(),item.key().size()), key);
-                        flatten_(key, item.value(), result);
+                        flatten_(key, item.value(), res);
                     }
                 }
                 break;
@@ -985,7 +985,7 @@ enum class pointer_state
             default:
             {
                 // add primitive parent_value with its reference string
-                result[parent_key] = parent_value;
+                res[parent_key] = parent_value;
                 break;
             }
         }
@@ -994,10 +994,10 @@ enum class pointer_state
     template<class Json>
     Json flatten(const Json& value)
     {
-        Json result;
+        Json res;
         std::basic_string<typename Json::char_type> parent_key;
-        flatten_(parent_key, value, result);
-        return result;
+        flatten_(parent_key, value, res);
+        return res;
     }
 
 
@@ -1063,11 +1063,11 @@ enum class pointer_state
         {
             JSONCONS_THROW(jsonpointer_error(jsonpointer_errc::argument_to_unflatten_invalid));
         }
-        Json result;
+        Json res;
 
         for (const auto& item: value.object_range())
         {
-            Json* part = &result;
+            Json* part = &res;
             basic_json_ptr<char_type> ptr(item.key());
             std::size_t index = 0;
             for (auto it = ptr.begin(); it != ptr.end(); )
@@ -1118,7 +1118,7 @@ enum class pointer_state
             }
         }
 
-        return result;
+        return res;
     }
 
     template<class Json>
@@ -1130,11 +1130,11 @@ enum class pointer_state
         {
             JSONCONS_THROW(jsonpointer_error(jsonpointer_errc::argument_to_unflatten_invalid));
         }
-        Json result;
+        Json res;
 
         for (const auto& item: value.object_range())
         {
-            Json* part = &result;
+            Json* part = &res;
             basic_json_ptr<char_type> ptr(item.key());
             for (auto it = ptr.begin(); it != ptr.end(); )
             {
@@ -1152,7 +1152,7 @@ enum class pointer_state
             }
         }
 
-        return options == unflatten_options::none ? safe_unflatten (result) : result;
+        return options == unflatten_options::none ? safe_unflatten (res) : res;
     }
 
     template<class Json>

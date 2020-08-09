@@ -2003,10 +2003,10 @@ private:
             {
                 if (is_negative)
                 {
-                    auto result = jsoncons::detail::to_integer_decimal<int64_t>(buffer_.data(), buffer_.length());
-                    if (result)
+                    auto res = jsoncons::detail::to_integer_decimal<int64_t>(buffer_.data(), buffer_.length());
+                    if (res)
                     {
-                        more_ = visitor_->int64_value(result.value(), semantic_tag::none, *this, ec);
+                        more_ = visitor_->int64_value(res.value(), semantic_tag::none, *this, ec);
                     }
                     else // Must be overflow
                     {
@@ -2015,18 +2015,18 @@ private:
                 }
                 else
                 {
-                    auto result = jsoncons::detail::to_integer_decimal<uint64_t>(buffer_.data(), buffer_.length());
-                    if (result)
+                    auto res = jsoncons::detail::to_integer_decimal<uint64_t>(buffer_.data(), buffer_.length());
+                    if (res)
                     {
-                        more_ = visitor_->uint64_value(result.value(), semantic_tag::none, *this, ec);
+                        more_ = visitor_->uint64_value(res.value(), semantic_tag::none, *this, ec);
                     }
-                    else if (result.error_code() == jsoncons::detail::to_integer_errc::overflow)
+                    else if (res.error_code() == jsoncons::detail::to_integer_errc::overflow)
                     {
                         more_ = visitor_->string_value(buffer_, semantic_tag::bigint, *this, ec);
                     }
                     else
                     {
-                        ec = result.error_code();
+                        ec = res.error_code();
                         more_ = false;
                         return;
                     }

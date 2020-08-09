@@ -274,13 +274,13 @@ namespace msgpack {
             {
                 case semantic_tag::epoch_second:
                 {
-                    auto result = jsoncons::detail::to_integer<int64_t>(sv.data(), sv.length());
-                    if (!result)
+                    auto res = jsoncons::detail::to_integer<int64_t>(sv.data(), sv.length());
+                    if (!res)
                     {
                         ec = msgpack_errc::invalid_timestamp;
                         return false;
                     }
-                    int64_t seconds = result.value();
+                    int64_t seconds = res.value();
                     write_timestamp(seconds, 0);
                     break;
                 }

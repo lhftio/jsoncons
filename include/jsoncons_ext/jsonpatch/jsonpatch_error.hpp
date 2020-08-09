@@ -65,9 +65,9 @@ namespace jsoncons { namespace jsonpatch {
     }
 
     inline 
-    std::error_code make_error_code(jsonpatch_errc result)
+    std::error_code make_error_code(jsonpatch_errc res)
     {
-        return std::error_code(static_cast<int>(result),jsonpatch_error_category());
+        return std::error_code(static_cast<int>(res),jsonpatch_error_category());
     }
 
 } // jsonpatch

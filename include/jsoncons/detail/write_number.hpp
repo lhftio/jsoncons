@@ -32,7 +32,7 @@ namespace detail {
 
     template<class Integer,class Result>
     typename std::enable_if<std::is_integral<Integer>::value,std::size_t>::type
-    write_integer(Integer value, Result& result)
+    write_integer(Integer value, Result& res)
     {
         using char_type = typename Result::value_type;
 
@@ -64,12 +64,12 @@ namespace detail {
         std::size_t count = (p - buf);
         if (is_negative)
         {
-            result.push_back('-');
+            res.push_back('-');
             ++count;
         }
         while (--p >= buf)
         {
-            result.push_back(*p);
+            res.push_back(*p);
         }
 
         return count;
@@ -79,7 +79,7 @@ namespace detail {
 
     template<class Integer,class Result>
     typename std::enable_if<std::is_integral<Integer>::value,std::size_t>::type
-    integer_to_string_hex(Integer value, Result& result)
+    integer_to_string_hex(Integer value, Result& res)
     {
         using char_type = typename Result::value_type;
 
@@ -111,12 +111,12 @@ namespace detail {
         std::size_t count = (p - buf);
         if (is_negative)
         {
-            result.push_back('-');
+            res.push_back('-');
             ++count;
         }
         while (--p >= buf)
         {
-            result.push_back(*p);
+            res.push_back(*p);
         }
 
         return count;
@@ -126,42 +126,42 @@ namespace detail {
 
     // fast exponent
     template <class Result>
-    void fill_exponent(int K, Result& result)
+    void fill_exponent(int K, Result& res)
     {
         if (K < 0)
         {
-            result.push_back('-');
+            res.push_back('-');
             K = -K;
         }
         else
         {
-            result.push_back('+'); // compatibility with sprintf
+            res.push_back('+'); // compatibility with sprintf
         }
 
         if (K < 10)
         {
-            result.push_back('0'); // compatibility with sprintf
-            result.push_back((char)('0' + K));
+            res.push_back('0'); // compatibility with sprintf
+            res.push_back((char)('0' + K));
         }
         else if (K < 100)
         {
-            result.push_back((char)('0' + K / 10)); K %= 10;
-            result.push_back((char)('0' + K));
+            res.push_back((char)('0' + K / 10)); K %= 10;
+            res.push_back((char)('0' + K));
         }
         else if (K < 1000)
         {
-            result.push_back((char)('0' + K / 100)); K %= 100;
-            result.push_back((char)('0' + K / 10)); K %= 10;
-            result.push_back((char)('0' + K));
+            res.push_back((char)('0' + K / 100)); K %= 100;
+            res.push_back((char)('0' + K / 10)); K %= 10;
+            res.push_back((char)('0' + K));
         }
         else
         {
-            jsoncons::detail::write_integer(K, result);
+            jsoncons::detail::write_integer(K, res);
         }
     }
 
     template <class Result>
-    void prettify_string(const char *buffer, std::size_t length, int k, int min_exp, int max_exp, Result& result)
+    void prettify_string(const char *buffer, std::size_t length, int k, int min_exp, int max_exp, Result& res)
     {
         int nb_digits = (int)length;
         int offset;
@@ -178,62 +178,62 @@ namespace detail {
              * Basically we want to print 12340000000 rather than 1234.0e7 or 1.234e10 */
             for (int i = 0; i < nb_digits; ++i)
             {
-                result.push_back(buffer[i]);
+                res.push_back(buffer[i]);
             }
             for (int i = nb_digits; i < kk; ++i)
             {
-                result.push_back('0');
+                res.push_back('0');
             }
-            result.push_back('.');
-            result.push_back('0');
+            res.push_back('.');
+            res.push_back('0');
         } 
         else if (0 < kk && kk <= max_exp)
         {
             /* comma number. Just insert a '.' at the correct location. */
             for (int i = 0; i < kk; ++i)
             {
-                result.push_back(buffer[i]);
+                res.push_back(buffer[i]);
             }
-            result.push_back('.');
+            res.push_back('.');
             for (int i = kk; i < nb_digits; ++i)
             {
-                result.push_back(buffer[i]);
+                res.push_back(buffer[i]);
             }
         } 
         else if (min_exp < kk && kk <= 0)
         {
             offset = 2 - kk;
 
-            result.push_back('0');
-            result.push_back('.');
+            res.push_back('0');
+            res.push_back('.');
             for (int i = 2; i < offset; ++i) 
-                result.push_back('0');
+                res.push_back('0');
             for (int i = 0; i < nb_digits; ++i)
             {
-                result.push_back(buffer[i]);
+                res.push_back(buffer[i]);
             }
         } 
         else if (nb_digits == 1)
         {
-            result.push_back(buffer[0]);
-            result.push_back('e');
-            fill_exponent(kk - 1, result);
+            res.push_back(buffer[0]);
+            res.push_back('e');
+            fill_exponent(kk - 1, res);
         } 
         else
         {
-            result.push_back(buffer[0]);
-            result.push_back('.');
+            res.push_back(buffer[0]);
+            res.push_back('.');
             for (int i = 1; i < nb_digits; ++i)
             {
-                result.push_back(buffer[i]);
+                res.push_back(buffer[i]);
             }
-            result.push_back('e');
-            fill_exponent(kk - 1, result);
+            res.push_back('e');
+            fill_exponent(kk - 1, res);
         }
     }
 
     template<class Result>
-    void dump_buffer(const char *buffer, std::size_t length, char decimal_point, Result& result)
+    void dump_buffer(const char *buffer, std::size_t length, char decimal_point, Result& res)
     {
         const char *sbeg = buffer;
         const char *send = sbeg + length;
@@ -257,39 +257,39 @@ namespace detail {
                 case '8':
                 case '9':
                 case '+':
-                    result.push_back(*q);
+                    res.push_back(*q);
                     break;
                 case 'e':
                 case 'E':
-                    result.push_back('e');
+                    res.push_back('e');
                     needs_dot = false;
                     break;
                 default:
                     if (*q == decimal_point)
                     {
                         needs_dot = false;
-                        result.push_back('.');
+                        res.push_back('.');
                     }
                     break;
                 }
             }
             if (needs_dot)
             {
-                result.push_back('.');
-                result.push_back('0');
+                res.push_back('.');
+                res.push_back('0');
                 needs_dot = true;
             }
         }
     }
 
     template<class Result>
-    bool dtoa_scientific(double val, char decimal_point, Result& result)
+    bool dtoa_scientific(double val, char decimal_point, Result& res)
     {
         if (val == 0)
         {
-            result.push_back('0');
-            result.push_back('.');
-            result.push_back('0');
+            res.push_back('0');
+            res.push_back('.');
+            res.push_back('0');
             return true;
         }
 
@@ -311,18 +311,18 @@ namespace detail {
                 return false;
             }
         }
-        dump_buffer(buffer, length, decimal_point, result);
+        dump_buffer(buffer, length, decimal_point, res);
         return true;
     }
 
     template<class Result>
-    bool dtoa_general(double val, char decimal_point, Result& result, std::false_type)
+    bool dtoa_general(double val, char decimal_point, Result& res, std::false_type)
     {
         if (val == 0)
         {
-            result.push_back('0');
-            result.push_back('.');
-            result.push_back('0');
+            res.push_back('0');
+            res.push_back('.');
+            res.push_back('0');
             return true;
         }
 
@@ -344,18 +344,18 @@ namespace detail {
                 return false;
             }
         }
-        dump_buffer(buffer, length, decimal_point, result);
+        dump_buffer(buffer, length, decimal_point, res);
         return true;
     }
 
     template<class Result>
-    bool dtoa_general(double v, char decimal_point, Result& result, std::true_type)
+    bool dtoa_general(double v, char decimal_point, Result& res, std::true_type)
     {
         if (v == 0)
         {
-            result.push_back('0');
-            result.push_back('.');
-            result.push_back('0');
+            res.push_back('0');
+            res.push_back('.');
+            res.push_back('0');
             return true;
         }
 
@@ -369,27 +369,27 @@ namespace detail {
         {
             if (std::signbit(v))
             {
-                result.push_back('-');
+                res.push_back('-');
             }
             // min exp: -4 is consistent with sprintf
             // max exp: std::numeric_limits<double>::max_digits10
-            jsoncons::detail::prettify_string(buffer, length, k, -4, std::numeric_limits<double>::max_digits10, result);
+            jsoncons::detail::prettify_string(buffer, length, k, -4, std::numeric_limits<double>::max_digits10, res);
             return true;
         }
         else
         {
-            return dtoa_general(v, decimal_point, result, std::false_type());
+            return dtoa_general(v, decimal_point, res, std::false_type());
         }
     }
 
     template<class Result>
-    bool dtoa_fixed(double val, char decimal_point, Result& result, std::false_type)
+    bool dtoa_fixed(double val, char decimal_point, Result& res, std::false_type)
     {
         if (val == 0)
         {
-            result.push_back('0');
-            result.push_back('.');
-            result.push_back('0');
+            res.push_back('0');
+            res.push_back('.');
+            res.push_back('0');
             return true;
         }
 
@@ -411,18 +411,18 @@ namespace detail {
                 return false;
             }
         }
-        dump_buffer(buffer, length, decimal_point, result);
+        dump_buffer(buffer, length, decimal_point, res);
         return true;
     }
 
     template<class Result>
-    bool dtoa_fixed(double v, char decimal_point, Result& result, std::true_type)
+    bool dtoa_fixed(double v, char decimal_point, Result& res, std::true_type)
     {
         if (v == 0)
         {
-            result.push_back('0');
-            result.push_back('.');
-            result.push_back('0');
+            res.push_back('0');
+            res.push_back('.');
+            res.push_back('0');
             return true;
         }
 
@@ -436,27 +436,27 @@ namespace detail {
         {
             if (std::signbit(v))
             {
-                result.push_back('-');
+                res.push_back('-');
             }
-            jsoncons::detail::prettify_string(buffer, length, k, std::numeric_limits<int>::lowest(), (std::numeric_limits<int>::max)(), result);
+            jsoncons::detail::prettify_string(buffer, length, k, std::numeric_limits<int>::lowest(), (std::numeric_limits<int>::max)(), res);
             return true;
         }
         else
         {
-            return dtoa_fixed(v, decimal_point, result, std::false_type());
+            return dtoa_fixed(v, decimal_point, res, std::false_type());
         }
     }
 
     template<class Result>
-    bool dtoa_fixed(double v, char decimal_point, Result& result)
+    bool dtoa_fixed(double v, char decimal_point, Result& res)
     {
-        return dtoa_fixed(v, decimal_point, result, std::integral_constant<bool, std::numeric_limits<double>::is_iec559>());
+        return dtoa_fixed(v, decimal_point, res, std::integral_constant<bool, std::numeric_limits<double>::is_iec559>());
     }
 
     template<class Result>
-    bool dtoa_general(double v, char decimal_point, Result& result)
+    bool dtoa_general(double v, char decimal_point, Result& res)
     {
-        return dtoa_general(v, decimal_point, result, std::integral_constant<bool, std::numeric_limits<double>::is_iec559>());
+        return dtoa_general(v, decimal_point, res, std::integral_constant<bool, std::numeric_limits<double>::is_iec559>());
     }
 
     class write_double
@@ -483,7 +483,7 @@ namespace detail {
         write_double& operator=(const write_double&) = default;
 
         template<class Result>
-        std::size_t operator()(double val, Result& result)
+        std::size_t operator()(double val, Result& res)
         {
             std::size_t count = 0;
 
@@ -501,11 +501,11 @@ namespace detail {
                         {
                             JSONCONS_THROW(json_runtime_error<std::invalid_argument>("write_double failed."));
                         }
-                        dump_buffer(number_buffer, length, decimal_point_, result);
+                        dump_buffer(number_buffer, length, decimal_point_, res);
                     }
                     else
                     {
-                        if (!dtoa_fixed(val, decimal_point_, result))
+                        if (!dtoa_fixed(val, decimal_point_, res))
                         {
                             JSONCONS_THROW(json_runtime_error<std::invalid_argument>("write_double failed."));
                         }
@@ -521,11 +521,11 @@ namespace detail {
                         {
                             JSONCONS_THROW(json_runtime_error<std::invalid_argument>("write_double failed."));
                         }
-                        dump_buffer(number_buffer, length, decimal_point_, result);
+                        dump_buffer(number_buffer, length, decimal_point_, res);
                     }
                     else
                     {
-                        if (!dtoa_scientific(val, decimal_point_, result))
+                        if (!dtoa_scientific(val, decimal_point_, res))
                         {
                             JSONCONS_THROW(json_runtime_error<std::invalid_argument>("write_double failed."));
                         }
@@ -541,11 +541,11 @@ namespace detail {
                         {
                             JSONCONS_THROW(json_runtime_error<std::invalid_argument>("write_double failed."));
                         }
-                        dump_buffer(number_buffer, length, decimal_point_, result);
+                        dump_buffer(number_buffer, length, decimal_point_, res);
                     }
                     else
                     {
-                        if (!dtoa_general(val, decimal_point_, result))
+                        if (!dtoa_general(val, decimal_point_, res))
                         {
                             JSONCONS_THROW(json_runtime_error<std::invalid_argument>("write_double failed."));
                         }

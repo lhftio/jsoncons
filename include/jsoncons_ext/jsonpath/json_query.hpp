@@ -306,8 +306,8 @@ namespace jsoncons { namespace jsonpath {
         private:
              jsonpath_filter_expr<Json> result_;
         public:
-            expr_selector(const jsonpath_filter_expr<Json>& result)
-                : result_(result)
+            expr_selector(const jsonpath_filter_expr<Json>& res)
+                : result_(res)
             {
             }
 
@@ -337,8 +337,8 @@ namespace jsoncons { namespace jsonpath {
         private:
              jsonpath_filter_expr<Json> result_;
         public:
-            filter_selector(const jsonpath_filter_expr<Json>& result)
-                : result_(result)
+            filter_selector(const jsonpath_filter_expr<Json>& res)
+                : result_(res)
             {
             }
 
@@ -538,32 +538,32 @@ namespace jsoncons { namespace jsonpath {
 
         Json get_values() const
         {
-            Json result = typename Json::array();
+            Json res = typename Json::array();
 
             if (stack_.size() > 0)
             {
-                result.reserve(stack_.back().size());
+                res.reserve(stack_.back().size());
                 for (const auto& p : stack_.back())
                 {
-                    result.push_back(*(p.val_ptr));
+                    res.push_back(*(p.val_ptr));
                 }
             }
-            return result;
+            return res;
         }
 
         std::vector<pointer> get_pointers() const
         {
-            std::vector<pointer> result;
+            std::vector<pointer> res;
 
             if (stack_.size() > 0)
             {
-                result.reserve(stack_.back().size());
+                res.reserve(stack_.back().size());
                 for (const auto& p : stack_.back())
                 {
-                    result.push_back(p.val_ptr);
+                    res.push_back(p.val_ptr);
                 }
             }
-            return result;
+            return res;
         }
 
         void call_function(jsonpath_resources<Json>& resources, const string_type& function_name, std::error_code& ec)
@@ -573,7 +573,7 @@ namespace jsoncons { namespace jsonpath {
             {
                 return;
             }
-            auto result = f(function_stack_, ec);
+            auto res = f(function_stack_, ec);
             if (ec)
             {
                 return;
@@ -581,23 +581,23 @@ namespace jsoncons { namespace jsonpath {
 
             string_type s = {'$'};
             node_set v;
-            pointer ptr = resources.create_temp(std::move(result));
+            pointer ptr = resources.create_temp(std::move(res));
             v.emplace_back(s,ptr);
             stack_.push_back(v);
         }
 
         Json get_normalized_paths() const
         {
-            Json result = typename Json::array();
+            Json res = typename Json::array();
             if (stack_.size() > 0)
             {
-                result.reserve(stack_.back().size());
+                res.reserve(stack_.back().size());
                 for (const auto& p : stack_.back())
                 {
-                    result.push_back(p.path);
+                    res.push_back(p.path);
                 }
             }
-            return result;
+            return res;
         }
 
         template <class T>
@@ -1216,20 +1216,20 @@ namespace jsoncons { namespace jsonpath {
                             case '(':
                             {
                                 jsonpath_filter_parser<Json> parser(line_,column_);
-                                auto result = parser.parse(resources, root, p_,end_input_,&p_);
+                                auto res = parser.parse(resources, root, p_,end_input_,&p_);
                                 line_ = parser.line();
                                 column_ = parser.column();
-                                selectors_.push_back(jsoncons::make_unique<expr_selector>(result));
+                                selectors_.push_back(jsoncons::make_unique<expr_selector>(res));
                                 state_stack_.back().state = path_state::comma_or_right_bracket;
                                 break;
                             }
                             case '?':
                             {
                                 jsonpath_filter_parser<Json> parser(line_,column_);
-                                auto result = parser.parse(resources,root,p_,end_input_,&p_);
+                                auto res = parser.parse(resources,root,p_,end_input_,&p_);
                                 line_ = parser.line();
                                 column_ = parser.column();
-                                selectors_.push_back(jsoncons::make_unique<filter_selector>(result));
+                                selectors_.push_back(jsoncons::make_unique<filter_selector>(res));
                                 state_stack_.back().state = path_state::comma_or_right_bracket;
                                 break;                   
                             }

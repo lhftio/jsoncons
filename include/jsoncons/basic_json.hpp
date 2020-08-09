@@ -2855,12 +2855,12 @@ public:
         json_decoder<basic_json> decoder;
         basic_json_parser<char_type> parser(options,err_handler);
 
-        auto result = unicons::skip_bom(s.begin(), s.end());
-        if (result.ec != unicons::encoding_errc())
+        auto res = unicons::skip_bom(s.begin(), s.end());
+        if (res.ec != unicons::encoding_errc())
         {
-            JSONCONS_THROW(ser_error(result.ec));
+            JSONCONS_THROW(ser_error(res.ec));
         }
-        std::size_t offset = result.it - s.begin();
+        std::size_t offset = res.it - s.begin();
         parser.update(s.data()+offset,s.size()-offset);
         parser.parse_some(decoder);
         parser.finish_parse(decoder);
@@ -3958,12 +3958,12 @@ public:
             case storage_kind::short_string_value:
             case storage_kind::long_string_value:
             {
-                auto result = jsoncons::detail::to_integer<T>(as_string_view().data(), as_string_view().length());
-                if (!result)
+                auto res = jsoncons::detail::to_integer<T>(as_string_view().data(), as_string_view().length());
+                if (!res)
                 {
-                    JSONCONS_THROW(json_runtime_error<std::runtime_error>(result.error_code().message()));
+                    JSONCONS_THROW(json_runtime_error<std::runtime_error>(res.error_code().message()));
                 }
-                return result.value();
+                return res.value();
             }
             case storage_kind::half_value:
                 return static_cast<T>(cast<half_storage>().value());
@@ -4349,8 +4349,8 @@ public:
             JSONCONS_FALLTHROUGH;
         case storage_kind::object_value:
         {
-            auto result = object_value().insert_or_assign(name, std::forward<T>(val));
-            return std::make_pair(object_iterator(result.first), result.second);
+            auto res = object_value().insert_or_assign(name, std::forward<T>(val));
+            return std::make_pair(object_iterator(res.first), res.second);
         }
         default:
             {
@@ -4369,8 +4369,8 @@ public:
             JSONCONS_FALLTHROUGH;
         case storage_kind::object_value:
         {
-            auto result = object_value().try_emplace(name, std::forward<Args>(args)...);
-            return std::make_pair(object_iterator(result.first),result.second);
+            auto res = object_value().try_emplace(name, std::forward<Args>(args)...);
+            return std::make_pair(object_iterator(res.first),res.second);
         }
         default:
             {

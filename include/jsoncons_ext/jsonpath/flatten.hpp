@@ -78,7 +78,7 @@ namespace jsoncons { namespace jsonpath {
     template<class Json>
     void flatten_(const std::basic_string<typename Json::char_type>& parent_key,
                   const Json& parent_value,
-                  Json& result)
+                  Json& res)
     {
         using char_type = typename Json::char_type;
         using string_type = std::basic_string<char_type>;
@@ -89,7 +89,7 @@ namespace jsoncons { namespace jsonpath {
             {
                 if (parent_value.empty())
                 {
-                    result.try_emplace(parent_key, parent_value);
+                    res.try_emplace(parent_key, parent_value);
                 }
                 else
                 {
@@ -99,7 +99,7 @@ namespace jsoncons { namespace jsonpath {
                         key.push_back('[');
                         jsoncons::detail::write_integer(i,key);
                         key.push_back(']');
-                        flatten_(key, parent_value.at(i), result);
+                        flatten_(key, parent_value.at(i), res);
                     }
                 }
                 break;
@@ -109,7 +109,7 @@ namespace jsoncons { namespace jsonpath {
             {
                 if (parent_value.empty())
                 {
-                    result.try_emplace(parent_key, Json());
+                    res.try_emplace(parent_key, Json());
                 }
                 else
                 {
@@ -121,7 +121,7 @@ namespace jsoncons { namespace jsonpath {
                         escape_string(item.key().data(), item.key().length(), key);
                         key.push_back('\'');
                         key.push_back(']');
-                        flatten_(key, item.value(), result);
+                        flatten_(key, item.value(), res);
                     }
                 }
                 break;
@@ -129,7 +129,7 @@ namespace jsoncons { namespace jsonpath {
 
             default:
             {
-                result[parent_key] = parent_value;
+                res[parent_key] = parent_value;
                 break;
             }
         }
@@ -138,10 +138,10 @@ namespace jsoncons { namespace jsonpath {
     template<class Json>
     Json flatten(const Json& value)
     {
-        Json result;
+        Json res;
         std::basic_string<typename Json::char_type> parent_key = {'$'};
-        flatten_(parent_key, value, result);
-        return result;
+        flatten_(parent_key, value, res);
+        return res;
     }
 
     enum class unflatten_state 
@@ -168,11 +168,11 @@ namespace jsoncons { namespace jsonpath {
             JSONCONS_THROW(jsonpath_error(jsonpath_errc::argument_to_unflatten_invalid));
         }
 
-        Json result;
+        Json res;
 
         for (const auto& item : value.object_range())
         {
-            Json* part = &result;
+            Json* part = &res;
             string_type buffer;
             unflatten_state state = unflatten_state::start;
 
@@ -424,7 +424,7 @@ namespace jsoncons { namespace jsonpath {
             }
         }
 
-        return result;
+        return res;
     }
 }}
 

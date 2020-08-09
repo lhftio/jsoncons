@@ -134,9 +134,9 @@ namespace jsoncons { namespace jsonpath {
     }
 
     inline 
-    std::error_code make_error_code(jsonpath_errc result)
+    std::error_code make_error_code(jsonpath_errc res)
     {
-        return std::error_code(static_cast<int>(result),jsonpath_error_category());
+        return std::error_code(static_cast<int>(res),jsonpath_error_category());
     }
 
 } // jsonpath

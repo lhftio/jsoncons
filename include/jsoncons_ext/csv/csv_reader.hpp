@@ -135,12 +135,12 @@ public:
          buffer_(alloc)
     {
         jsoncons::basic_string_view<CharT> sv(std::forward<Source>(source));
-        auto result = unicons::skip_bom(sv.begin(), sv.end());
-        if (result.ec != unicons::encoding_errc())
+        auto res = unicons::skip_bom(sv.begin(), sv.end());
+        if (res.ec != unicons::encoding_errc())
         {
-            JSONCONS_THROW(ser_error(result.ec,parser_.line(),parser_.column()));
+            JSONCONS_THROW(ser_error(res.ec,parser_.line(),parser_.column()));
         }
-        std::size_t offset = result.it - sv.begin();
+        std::size_t offset = res.it - sv.begin();
         parser_.update(sv.data()+offset,sv.size()-offset);
     }
 
@@ -235,13 +235,13 @@ private:
         }
         else if (begin_)
         {
-            auto result = unicons::skip_bom(buffer_.begin(), buffer_.end());
-            if (result.ec != unicons::encoding_errc())
+            auto res = unicons::skip_bom(buffer_.begin(), buffer_.end());
+            if (res.ec != unicons::encoding_errc())
             {
-                ec = result.ec;
+                ec = res.ec;
                 return;
             }
-            std::size_t offset = result.it - buffer_.begin();
+            std::size_t offset = res.it - buffer_.begin();
             parser_.update(buffer_.data()+offset,buffer_.size()-offset);
             begin_ = false;
         }

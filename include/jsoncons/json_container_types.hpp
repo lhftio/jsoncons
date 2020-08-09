@@ -700,8 +700,8 @@ namespace jsoncons {
         {
             auto it = std::lower_bound(members_.begin(),members_.end(), name, 
                                        [](const key_value_type& a, const string_view_type& k) -> bool {return string_view_type(a.key()).compare(k) < 0;});        
-            auto result = (it != members_.end() && it->key() == name) ? it : members_.end();
-            return result;
+            auto res = (it != members_.end() && it->key() == name) ? it : members_.end();
+            return res;
         }
 
         const_iterator find(const string_view_type& name) const noexcept
@@ -709,8 +709,8 @@ namespace jsoncons {
             auto it = std::lower_bound(members_.begin(),members_.end(), 
                                        name, 
                                        [](const key_value_type& a, const string_view_type& k) -> bool {return string_view_type(a.key()).compare(k) < 0;});
-            auto result = (it != members_.end() && it->key() == name) ? it : members_.end();
-            return result;
+            auto res = (it != members_.end() && it->key() == name) ? it : members_.end();
+            return res;
         }
 
         void erase(const_iterator pos) 
@@ -1294,16 +1294,16 @@ namespace jsoncons {
                 index_.erase(last_unique, index_.end());
                 std::sort(index_.begin(), index_.end());
 
-                auto result = index_.rbegin();
-                if (*result != members_.size())
+                auto res = index_.rbegin();
+                if (*res != members_.size())
                 {
-                    members_.erase(members_.begin() + (*result + 1), members_.end());
+                    members_.erase(members_.begin() + (*res + 1), members_.end());
                 }
-                for (auto it = index_.rbegin() + 1; it != index_.rend(); ++it, ++result)
+                for (auto it = index_.rbegin() + 1; it != index_.rend(); ++it, ++res)
                 {
-                    if (*result - *it > 1)
+                    if (*res - *it > 1)
                     {
-                        members_.erase(members_.begin() + (*it + 1), members_.begin() + *result);
+                        members_.erase(members_.begin() + (*it + 1), members_.begin() + *res);
                     }
                 }
             }
@@ -1333,16 +1333,16 @@ namespace jsoncons {
                 index_.erase(last_unique, index_.end());
                 std::sort(index_.begin(), index_.end());
 
-                auto result = index_.rbegin();
-                if (*result != members_.size())
+                auto res = index_.rbegin();
+                if (*res != members_.size())
                 {
-                    members_.erase(members_.begin() + (*result + 1), members_.end());
+                    members_.erase(members_.begin() + (*res + 1), members_.end());
                 }
-                for (auto it = index_.rbegin() + 1; it != index_.rend(); ++it, ++result)
+                for (auto it = index_.rbegin() + 1; it != index_.rend(); ++it, ++res)
                 {
-                    if (*result - *it > 1)
+                    if (*res - *it > 1)
                     {
-                        members_.erase(members_.begin() + (*it + 1), members_.begin() + *result);
+                        members_.erase(members_.begin() + (*it + 1), members_.begin() + *res);
                     }
                 }
             }
@@ -1517,16 +1517,16 @@ namespace jsoncons {
                 index_.erase(last_unique, index_.end());
                 std::sort(index_.begin(), index_.end());
 
-                auto result = index_.rbegin();
-                if (*result != members_.size())
+                auto res = index_.rbegin();
+                if (*res != members_.size())
                 {
-                    members_.erase(members_.begin() + (*result + 1), members_.end());
+                    members_.erase(members_.begin() + (*res + 1), members_.end());
                 }
-                for (auto it = index_.rbegin() + 1; it != index_.rend(); ++it, ++result)
+                for (auto it = index_.rbegin() + 1; it != index_.rend(); ++it, ++res)
                 {
-                    if (*result - *it > 1)
+                    if (*res - *it > 1)
                     {
-                        members_.erase(members_.begin() + (*it + 1), members_.begin() + *result);
+                        members_.erase(members_.begin() + (*it + 1), members_.begin() + *res);
                     }
                 }
             }
@@ -1551,16 +1551,16 @@ namespace jsoncons {
         typename std::enable_if<jsoncons::detail::is_stateless<A>::value,std::pair<iterator,bool>>::type
         insert_or_assign(const string_view_type& name, T&& value)
         {
-            auto result = insert_index_entry(name,members_.size());
-            if (result.second)
+            auto res = insert_index_entry(name,members_.size());
+            if (res.second)
             {
                 members_.emplace_back(key_type(name.begin(), name.end()), std::forward<T>(value));
-                auto it = members_.begin() + result.first;
+                auto it = members_.begin() + res.first;
                 return std::make_pair(it,true);
             }
             else
             {
-                auto it = members_.begin() + result.first;
+                auto it = members_.begin() + res.first;
                 it->value(Json(std::forward<T>(value)));
                 return std::make_pair(it,false);
             }
@@ -1570,17 +1570,17 @@ namespace jsoncons {
         typename std::enable_if<!jsoncons::detail::is_stateless<A>::value,std::pair<iterator,bool>>::type
         insert_or_assign(const string_view_type& name, T&& value)
         {
-            auto result = insert_index_entry(name,members_.size());
-            if (result.second)
+            auto res = insert_index_entry(name,members_.size());
+            if (res.second)
             {
                 members_.emplace_back(key_type(name.begin(),name.end(),get_allocator()), 
                                       std::forward<T>(value),get_allocator());
-                auto it = members_.begin() + result.first;
+                auto it = members_.begin() + res.first;
                 return std::make_pair(it,true);
             }
             else
             {
-                auto it = members_.begin() + result.first;
+                auto it = members_.begin() + res.first;
                 it->value(Json(std::forward<T>(value),get_allocator()));
                 return std::make_pair(it,false);
             }
@@ -1592,22 +1592,22 @@ namespace jsoncons {
         {
             if (hint == members_.end())
             {
-                auto result = insert_or_assign(key, std::forward<T>(value));
-                return result.first;
+                auto res = insert_or_assign(key, std::forward<T>(value));
+                return res.first;
             }
             else
             {
                 std::size_t pos = hint - members_.begin();
-                auto result = insert_index_entry(key,pos);
+                auto res = insert_index_entry(key,pos);
 
-                if (result.second)
+                if (res.second)
                 {
                     auto it = members_.emplace(hint, key_type(key.begin(), key.end()), std::forward<T>(value));
                     return it;
                 }
                 else
                 {
-                    auto it = members_.begin() + result.first;
+                    auto it = members_.begin() + res.first;
                     it->value(Json(std::forward<T>(value)));
                     return it;
                 }
@@ -1620,15 +1620,15 @@ namespace jsoncons {
         {
             if (hint == members_.end())
             {
-                auto result = insert_or_assign(key, std::forward<T>(value));
-                return result.first;
+                auto res = insert_or_assign(key, std::forward<T>(value));
+                return res.first;
             }
             else
             {
                 std::size_t pos = hint - members_.begin();
-                auto result = insert_index_entry(key,pos);
+                auto res = insert_index_entry(key,pos);
 
-                if (result.second)
+                if (res.second)
                 {
                     auto it = members_.emplace(hint, 
                                                key_type(key.begin(),key.end(),get_allocator()), 
@@ -1637,7 +1637,7 @@ namespace jsoncons {
                 }
                 else
                 {
-                    auto it = members_.begin() + result.first;
+                    auto it = members_.begin() + res.first;
                     it->value(Json(std::forward<T>(value),get_allocator()));
                     return it;
                 }
@@ -1783,16 +1783,16 @@ namespace jsoncons {
         typename std::enable_if<jsoncons::detail::is_stateless<A>::value,std::pair<iterator,bool>>::type
         try_emplace(const string_view_type& name, Args&&... args)
         {
-            auto result = insert_index_entry(name,members_.size());
-            if (result.second)
+            auto res = insert_index_entry(name,members_.size());
+            if (res.second)
             {
                 members_.emplace_back(key_type(name.begin(), name.end()), std::forward<Args>(args)...);
-                auto it = members_.begin() + result.first;
+                auto it = members_.begin() + res.first;
                 return std::make_pair(it,true);
             }
             else
             {
-                auto it = members_.begin() + result.first;
+                auto it = members_.begin() + res.first;
                 return std::make_pair(it,false);
             }
         }
@@ -1801,17 +1801,17 @@ namespace jsoncons {
         typename std::enable_if<!jsoncons::detail::is_stateless<A>::value,std::pair<iterator,bool>>::type
         try_emplace(const string_view_type& key, Args&&... args)
         {
-            auto result = insert_index_entry(key,members_.size());
-            if (result.second)
+            auto res = insert_index_entry(key,members_.size());
+            if (res.second)
             {
                 members_.emplace_back(key_type(key.begin(),key.end(), get_allocator()), 
                                       std::forward<Args>(args)...);
-                auto it = members_.begin() + result.first;
+                auto it = members_.begin() + res.first;
                 return std::make_pair(it,true);
             }
             else
             {
-                auto it = members_.begin() + result.first;
+                auto it = members_.begin() + res.first;
                 return std::make_pair(it,false);
             }
         }
@@ -1822,22 +1822,22 @@ namespace jsoncons {
         {
             if (hint == members_.end())
             {
-                auto result = try_emplace(key, std::forward<Args>(args)...);
-                return result.first;
+                auto res = try_emplace(key, std::forward<Args>(args)...);
+                return res.first;
             }
             else
             {
                 std::size_t pos = hint - members_.begin();
-                auto result = insert_index_entry(key, pos);
+                auto res = insert_index_entry(key, pos);
 
-                if (result.second)
+                if (res.second)
                 {
                     auto it = members_.emplace(hint, key_type(key.begin(), key.end()), std::forward<Args>(args)...);
                     return it;
                 }
                 else
                 {
-                    auto it = members_.begin() + result.first;
+                    auto it = members_.begin() + res.first;
                     return it;
                 }
             }
@@ -1849,15 +1849,15 @@ namespace jsoncons {
         {
             if (hint == members_.end())
             {
-                auto result = try_emplace(key, std::forward<Args>(args)...);
-                return result.first;
+                auto res = try_emplace(key, std::forward<Args>(args)...);
+                return res.first;
             }
             else
             {
                 std::size_t pos = hint - members_.begin();
-                auto result = insert_index_entry(key, pos);
+                auto res = insert_index_entry(key, pos);
 
-                if (result.second)
+                if (res.second)
                 {
                     auto it = members_.emplace(hint, 
                                                key_type(key.begin(),key.end(), get_allocator()), 
@@ -1866,7 +1866,7 @@ namespace jsoncons {
                 }
                 else
                 {
-                    auto it = members_.begin() + result.first;
+                    auto it = members_.begin() + res.first;
                     return it;
                 }
             }

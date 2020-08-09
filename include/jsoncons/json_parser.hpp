@@ -2509,9 +2509,9 @@ escape_u8:
         JSONCONS_UNREACHABLE();               
     }
 
-    void translate_conv_errc(unicons::conv_errc result, std::error_code& ec)
+    void translate_conv_errc(unicons::conv_errc res, std::error_code& ec)
     {
-        switch (result)
+        switch (res)
         {
         case unicons::conv_errc():
             break;
@@ -2619,10 +2619,10 @@ private:
 
     void end_negative_value(basic_json_visitor<CharT>& visitor, std::error_code& ec)
     {
-        auto result = jsoncons::detail::to_integer_unchecked<int64_t>(string_buffer_.data(), string_buffer_.length());
-        if (result)
+        auto res = jsoncons::detail::to_integer_unchecked<int64_t>(string_buffer_.data(), string_buffer_.length());
+        if (res)
         {
-            more_ = visitor.int64_value(result.value(), semantic_tag::none, *this, ec);
+            more_ = visitor.int64_value(res.value(), semantic_tag::none, *this, ec);
         }
         else // Must be overflow
         {
@@ -2633,10 +2633,10 @@ private:
 
     void end_positive_value(basic_json_visitor<CharT>& visitor, std::error_code& ec)
     {
-        auto result = jsoncons::detail::to_integer_unchecked<uint64_t>(string_buffer_.data(), string_buffer_.length());
-        if (result)
+        auto res = jsoncons::detail::to_integer_unchecked<uint64_t>(string_buffer_.data(), string_buffer_.length());
+        if (res)
         {
-            more_ = visitor.uint64_value(result.value(), semantic_tag::none, *this, ec);
+            more_ = visitor.uint64_value(res.value(), semantic_tag::none, *this, ec);
         }
         else // Must be overflow
         {
@@ -2676,11 +2676,11 @@ private:
     void end_string_value(const CharT* s, std::size_t length, basic_json_visitor<CharT>& visitor, std::error_code& ec) 
     {
         string_view_type sv(s, length);
-        auto result = unicons::validate(s,s+length);
-        if (result.ec != unicons::conv_errc())
+        auto res = unicons::validate(s,s+length);
+        if (res.ec != unicons::conv_errc())
         {
-            translate_conv_errc(result.ec,ec);
-            position_ += (result.it - s);
+            translate_conv_errc(res.ec,ec);
+            position_ += (res.it - s);
             return;
         }
         switch (parent())

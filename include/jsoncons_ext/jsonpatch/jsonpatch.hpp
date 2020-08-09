@@ -102,11 +102,11 @@ namespace detail {
     {
         using char_type = typename Json::char_type;
 
-        Json result = typename Json::array();
+        Json res = typename Json::array();
 
         if (source == target)
         {
-            return result;
+            return res;
         }
 
         if (source.is_array() && target.is_array())
@@ -118,7 +118,7 @@ namespace detail {
                 ss.push_back('/');
                 jsoncons::detail::write_integer(i,ss);
                 auto temp_diff = from_diff(source[i],target[i],ss);
-                result.insert(result.array_range().end(),temp_diff.array_range().begin(),temp_diff.array_range().end());
+                res.insert(res.array_range().end(),temp_diff.array_range().begin(),temp_diff.array_range().end());
             }
             // Element in source, not in target - remove
             for (std::size_t i = source.size(); i-- > target.size();)
@@ -129,7 +129,7 @@ namespace detail {
                 Json val(json_object_arg);
                 val.insert_or_assign(op_literal<char_type>(), remove_literal<char_type>());
                 val.insert_or_assign(path_literal<char_type>(), ss);
-                result.push_back(std::move(val));
+                res.push_back(std::move(val));
             }
             // Element in target, not in source - add, 
             // Fix contributed by Alexander rog13
@@ -143,7 +143,7 @@ namespace detail {
                 val.insert_or_assign(op_literal<char_type>(), add_literal<char_type>());
                 val.insert_or_assign(path_literal<char_type>(), ss);
                 val.insert_or_assign(value_literal<char_type>(), a);
-                result.push_back(std::move(val));
+                res.push_back(std::move(val));
             }
         }
         else if (source.is_object() && target.is_object())
@@ -157,14 +157,14 @@ namespace detail {
                 if (it != target.object_range().end())
                 {
                     auto temp_diff = from_diff(a.value(),it->value(),ss);
-                    result.insert(result.array_range().end(),temp_diff.array_range().begin(),temp_diff.array_range().end());
+                    res.insert(res.array_range().end(),temp_diff.array_range().begin(),temp_diff.array_range().end());
                 }
                 else
                 {
                     Json val(json_object_arg);
                     val.insert_or_assign(op_literal<char_type>(), remove_literal<char_type>());
                     val.insert_or_assign(path_literal<char_type>(), ss);
-                    result.push_back(std::move(val));
+                    res.push_back(std::move(val));
                 }
             }
             for (const auto& a : target.object_range())
@@ -179,7 +179,7 @@ namespace detail {
                     val.insert_or_assign(op_literal<char_type>(), add_literal<char_type>());
                     val.insert_or_assign(path_literal<char_type>(), ss);
                     val.insert_or_assign(value_literal<char_type>(), a.value());
-                    result.push_back(std::move(val));
+                    res.push_back(std::move(val));
                 }
             }
         }
@@ -189,10 +189,10 @@ namespace detail {
             val.insert_or_assign(op_literal<char_type>(), replace_literal<char_type>());
             val.insert_or_assign(path_literal<char_type>(), path);
             val.insert_or_assign(value_literal<char_type>(), target);
-            result.push_back(std::move(val));
+            res.push_back(std::move(val));
         }
 
-        return result;
+        return res;
     }
 }
 

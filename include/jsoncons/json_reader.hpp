@@ -80,12 +80,12 @@ private:
     bool visit_key(const string_view_type& name, const ser_context& context, std::error_code& ec) override
     {
         std::basic_string<CharT> target;
-        auto result = unicons::convert(
+        auto res = unicons::convert(
             name.begin(), name.end(), std::back_inserter(target), 
             unicons::conv_flags::strict);
-        if (result.ec != unicons::conv_errc())
+        if (res.ec != unicons::conv_errc())
         {
-            JSONCONS_THROW(ser_error(result.ec,context.line(),context.column()));
+            JSONCONS_THROW(ser_error(res.ec,context.line(),context.column()));
         }
         return other_visitor_.key(target, context, ec);
     }
@@ -93,12 +93,12 @@ private:
     bool visit_string(const string_view_type& value, semantic_tag tag, const ser_context& context, std::error_code& ec) override
     {
         std::basic_string<CharT> target;
-        auto result = unicons::convert(
+        auto res = unicons::convert(
             value.begin(), value.end(), std::back_inserter(target), 
             unicons::conv_flags::strict);
-        if (result.ec != unicons::conv_errc())
+        if (res.ec != unicons::conv_errc())
         {
-            ec = result.ec;
+            ec = res.ec;
             return false;
         }
         return other_visitor_.string_value(target, tag, context, ec);
@@ -295,12 +295,12 @@ public:
          buffer_(alloc)
     {
         basic_string_view<CharT> sv(std::forward<Source>(source));
-        auto result = unicons::skip_bom(sv.begin(), sv.end());
-        if (result.ec != unicons::encoding_errc())
+        auto res = unicons::skip_bom(sv.begin(), sv.end());
+        if (res.ec != unicons::encoding_errc())
         {
-            JSONCONS_THROW(ser_error(result.ec,parser_.line(),parser_.column()));
+            JSONCONS_THROW(ser_error(res.ec,parser_.line(),parser_.column()));
         }
-        std::size_t offset = result.it - sv.begin();
+        std::size_t offset = res.it - sv.begin();
         parser_.update(sv.data()+offset,sv.size()-offset);
     }
 
@@ -492,13 +492,13 @@ private:
         }
         else if (begin_)
         {
-            auto result = unicons::skip_bom(buffer_.begin(), buffer_.end());
-            if (result.ec != unicons::encoding_errc())
+            auto res = unicons::skip_bom(buffer_.begin(), buffer_.end());
+            if (res.ec != unicons::encoding_errc())
             {
-                ec = result.ec;
+                ec = res.ec;
                 return;
             }
-            std::size_t offset = result.it - buffer_.begin();
+            std::size_t offset = res.it - buffer_.begin();
             parser_.update(buffer_.data()+offset,buffer_.size()-offset);
             begin_ = false;
         }
