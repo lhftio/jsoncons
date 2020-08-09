@@ -141,24 +141,24 @@ void basics_json_example2()
     // Use a JSONPath expression to find 
       
     // (1) The authors of books that cost less than $12
-    json result = json_query(booklist, "$[*][?(@.price < 12)].author");
-    std::cout << "(1) " << result << std::endl;
+    json res = json_query(booklist, "$[*][?(@.price < 12)].author");
+    std::cout << "(1) " << res << std::endl;
 
     // (2) The number of books
-    result = json_query(booklist, "$.length");
-    std::cout << "(2) " << result << std::endl;
+    res = json_query(booklist, "$.length");
+    std::cout << "(2) " << res << std::endl;
 
     // (3) The third book
-    result = json_query(booklist, "$[2]");
-    std::cout << "(3) " << std::endl << pretty_print(result) << std::endl;
+    res = json_query(booklist, "$[2]");
+    std::cout << "(3) " << std::endl << pretty_print(res) << std::endl;
 
     // (4) The authors of books that were published in 2004
-    result = json_query(booklist, "$[*][?(@.date =~ /2004.*?/)].author");
-    std::cout << "(4) " << result << std::endl;
+    res = json_query(booklist, "$[*][?(@.date =~ /2004.*?/)].author");
+    std::cout << "(4) " << res << std::endl;
 
     // (5) The titles of all books that have ratings
-    result = json_query(booklist, "$[*][?(@.ratings)].title");
-    std::cout << "(5) " << result << std::endl;
+    res = json_query(booklist, "$[*][?(@.ratings)].title");
+    std::cout << "(5) " << res << std::endl;
 }
 
 void basics_examples()

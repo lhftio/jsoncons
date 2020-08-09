@@ -247,8 +247,8 @@ namespace {
 
         // Query with JSONPath
         std::cout << "(4)\n";
-        json result = jsonpath::json_query(other,"$[?(@ < 1.5)]");
-        std::cout << pretty_print(result) << "\n\n";
+        json res = jsonpath::json_query(other,"$[?(@ < 1.5)]");
+        std::cout << pretty_print(res) << "\n\n";
     }
 
     void encode_cbor_with_packed_strings()
@@ -399,8 +399,8 @@ namespace {
 
         // Select the third column with JSONPath
         std::cout << "(3)\n";
-        json result = jsonpath::json_query(j,"$[*][2]");
-        std::cout << pretty_print(result) << "\n\n";
+        json res = jsonpath::json_query(j,"$[*][2]");
+        std::cout << pretty_print(res) << "\n\n";
 
         // Serialize back to CBOR
         std::vector<uint8_t> buffer;

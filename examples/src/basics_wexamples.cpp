@@ -140,24 +140,24 @@ void basics_wjson_example2()
     // Use a JSONPath expression to find 
     //  
     // (1) The authors of books that cost less than $12
-    wjson result = jsonpath::json_query(booklist, L"$[*][?(@.price < 12)].author");
-    std::wcout << L"(1) " << result << std::endl;
+    wjson res = jsonpath::json_query(booklist, L"$[*][?(@.price < 12)].author");
+    std::wcout << L"(1) " << res << std::endl;
 
     // (2) The number of books
-    result = jsonpath::json_query(booklist, L"$.length");
-    std::wcout << L"(2) " << result << std::endl;
+    res = jsonpath::json_query(booklist, L"$.length");
+    std::wcout << L"(2) " << res << std::endl;
 
     // (3) The third book
-    result = jsonpath::json_query(booklist, L"$[2]");
-    std::wcout << L"(3) " << std::endl << pretty_print(result) << std::endl;
+    res = jsonpath::json_query(booklist, L"$[2]");
+    std::wcout << L"(3) " << std::endl << pretty_print(res) << std::endl;
 
     // (4) The authors of books that were published in 2004
-    result = jsonpath::json_query(booklist, L"$[*][?(@.date =~ /2004.*?/)].author");
-    std::wcout << L"(4) " << result << std::endl;
+    res = jsonpath::json_query(booklist, L"$[*][?(@.date =~ /2004.*?/)].author");
+    std::wcout << L"(4) " << res << std::endl;
 
     // (5) The titles of all books that have ratings
-    result = jsonpath::json_query(booklist, L"$[*][?(@.ratings)].title");
-    std::wcout << L"(5) " << result << std::endl;
+    res = jsonpath::json_query(booklist, L"$[*][?(@.ratings)].title");
+    std::wcout << L"(5) " << res << std::endl;
 }
 
 void basics_wexamples()

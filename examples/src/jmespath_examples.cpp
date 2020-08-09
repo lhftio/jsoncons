@@ -30,9 +30,9 @@ namespace {
 
         json doc = json::parse(jtext);
 
-        json result = jmespath::search(doc, expr);
+        json res = jmespath::search(doc, expr);
 
-        std::cout << pretty_print(result) << "\n\n";
+        std::cout << pretty_print(res) << "\n\n";
     }
 
     void jmespath_expression_example()
@@ -63,9 +63,9 @@ namespace {
 
         json doc = json::parse(jtext);
 
-        json result = expr.evaluate(doc);
+        json res = expr.evaluate(doc);
 
-        std::cout << pretty_print(result) << "\n\n";
+        std::cout << pretty_print(res) << "\n\n";
     }
 
 } // namespace

@@ -104,8 +104,8 @@ namespace {
         // Using exceptions to report errors
         try
         {
-            json result = jsonpointer::get(j, "/1/author");
-            std::cout << "(1) " << result << std::endl;
+            json res = jsonpointer::get(j, "/1/author");
+            std::cout << "(1) " << res << std::endl;
         }
         catch (const jsonpointer::jsonpointer_error& e)
         {
@@ -114,7 +114,7 @@ namespace {
 
         // Using error codes to report errors
         std::error_code ec;
-        const json& result = jsonpointer::get(j, "/0/title", ec);
+        const json& res = jsonpointer::get(j, "/0/title", ec);
 
         if (ec)
         {
@@ -122,7 +122,7 @@ namespace {
         }
         else
         {
-            std::cout << "(2) " << result << std::endl;
+            std::cout << "(2) " << res << std::endl;
         }
     }
 
@@ -328,9 +328,9 @@ namespace {
 
         try
         {
-            json result = jsonpointer::get(j, "/1/isbn");
+            json res = jsonpointer::get(j, "/1/isbn");
             std::cout << "succeeded?" << std::endl;
-            std::cout << result << std::endl;
+            std::cout << res << std::endl;
         }
         catch (const jsonpointer::jsonpointer_error& e)
         {

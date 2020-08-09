@@ -243,7 +243,7 @@ TEST_CASE("serialize object to bson")
 
     JSONCONS_TRY
     {
-        json result = bson::decode_bson<json>(v);
+        json res = bson::decode_bson<json>(v);
     }
     JSONCONS_CATCH (const std::exception& e)
     {

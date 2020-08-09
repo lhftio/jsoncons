@@ -62,22 +62,22 @@ TEST_CASE("bson c test suite")
         source.read(buf, sizeof(int32_t));
         auto doc_size = jsoncons::detail::little_to_native<int32_t>(buf, sizeof(buf));
         REQUIRE(doc_size == 16);
-        auto result = source.get_character();
-        REQUIRE(result);
-        REQUIRE(result.value() == 0x12); // 64-bit integer
+        auto res = source.get_character();
+        REQUIRE(res);
+        REQUIRE(res.value() == 0x12); // 64-bit integer
         std::string s;
-        for (result = source.get_character();
-             result && result.value() != 0; result = source.get_character())
+        for (res = source.get_character();
+             res && res.value() != 0; res = source.get_character())
         {
-            s.push_back(result.value());
+            s.push_back(res.value());
         }
         REQUIRE(s == std::string("a"));
         source.read(buf, sizeof(int64_t));
         auto val = jsoncons::detail::little_to_native<int64_t>(buf, sizeof(int64_t));
         CHECK(val == 100000000000000ULL);
-        result = source.get_character();
-        REQUIRE(result);
-        CHECK(result.value() == 0);
+        res = source.get_character();
+        REQUIRE(res);
+        CHECK(res.value() == 0);
         CHECK(source.eof());
 
         std::vector<char> bytes2;

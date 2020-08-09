@@ -95,8 +95,8 @@ TEST_CASE("serialize array to cbor")
 
     JSONCONS_TRY
     {
-        json result = cbor::decode_cbor<json>(v);
-        //std::cout << result << std::endl;
+        json res = cbor::decode_cbor<json>(v);
+        //std::cout << res << std::endl;
     }
     JSONCONS_CATCH (const std::exception& e)
     {
@@ -120,8 +120,8 @@ TEST_CASE("test_serialize_indefinite_length_array")
 
     JSONCONS_TRY
     {
-        json result = cbor::decode_cbor<json>(v);
-        //std::cout << result << std::endl;
+        json res = cbor::decode_cbor<json>(v);
+        //std::cout << res << std::endl;
     }
     JSONCONS_CATCH (const std::exception& e)
     {
@@ -143,8 +143,8 @@ TEST_CASE("test_serialize_bignum")
 
     JSONCONS_TRY
     {
-        json result = cbor::decode_cbor<json>(v);
-        CHECK(result[0].as<std::string>() == std::string("18446744073709551616"));
+        json res = cbor::decode_cbor<json>(v);
+        CHECK(res[0].as<std::string>() == std::string("18446744073709551616"));
     }
     JSONCONS_CATCH (const std::exception& e)
     {
@@ -168,8 +168,8 @@ TEST_CASE("test_serialize_negative_bignum1")
 
     JSONCONS_TRY
     {
-        json result = cbor::decode_cbor<json>(v);
-        CHECK(result[0].as<std::string>() == std::string("-18446744073709551617"));
+        json res = cbor::decode_cbor<json>(v);
+        CHECK(res[0].as<std::string>() == std::string("-18446744073709551617"));
     }
     JSONCONS_CATCH (const std::exception& e)
     {
@@ -193,11 +193,11 @@ TEST_CASE("test_serialize_negative_bignum2")
 
     JSONCONS_TRY
     {
-        json result = cbor::decode_cbor<json>(v);
+        json res = cbor::decode_cbor<json>(v);
         json_options options;
         options.bigint_format(bigint_chars_format::number);
         std::string text;
-        result.dump(text,options);
+        res.dump(text,options);
         CHECK(text == std::string("[-18446744073709551617]"));
     }
     JSONCONS_CATCH (const std::exception& e)
@@ -223,11 +223,11 @@ TEST_CASE("test_serialize_negative_bignum3")
 
     JSONCONS_TRY
     {
-        json result = cbor::decode_cbor<json>(v);
+        json res = cbor::decode_cbor<json>(v);
         json_options options;
         options.bigint_format(bigint_chars_format::base64url);
         std::string text;
-        result.dump(text,options);
+        res.dump(text,options);
         CHECK(text == std::string("[\"~AQAAAAAAAAAA\"]"));
     }
     JSONCONS_CATCH (const std::exception& e)
@@ -246,8 +246,8 @@ TEST_CASE("serialize bigdec to cbor")
         encoder.flush();
         JSONCONS_TRY
         {
-            json result = cbor::decode_cbor<json>(v);
-            CHECK(result.as<std::string>() == std::string("1.84467440737095516160e+19"));
+            json res = cbor::decode_cbor<json>(v);
+            CHECK(res.as<std::string>() == std::string("1.84467440737095516160e+19"));
         }
         JSONCONS_CATCH (const std::exception& e)
         {
@@ -262,8 +262,8 @@ TEST_CASE("serialize bigdec to cbor")
         encoder.flush();
         JSONCONS_TRY
         {
-            json result = cbor::decode_cbor<json>(v);
-            CHECK(result.as<std::string>() == std::string("184467440737095.51616"));
+            json res = cbor::decode_cbor<json>(v);
+            CHECK(res.as<std::string>() == std::string("184467440737095.51616"));
         }
         JSONCONS_CATCH (const std::exception& e)
         {
@@ -278,8 +278,8 @@ TEST_CASE("serialize bigdec to cbor")
         encoder.flush();
         JSONCONS_TRY
         {
-            json result = cbor::decode_cbor<json>(v);
-            CHECK(result.as<std::string>() == std::string("-184467440737095.51616"));
+            json res = cbor::decode_cbor<json>(v);
+            CHECK(res.as<std::string>() == std::string("-184467440737095.51616"));
         }
         JSONCONS_CATCH (const std::exception& e)
         {
@@ -294,8 +294,8 @@ TEST_CASE("serialize bigdec to cbor")
         encoder.flush();
         JSONCONS_TRY
         {
-            json result = cbor::decode_cbor<json>(v);
-            CHECK(result.as<std::string>() == std::string("-1.8446744073709551616e+24"));
+            json res = cbor::decode_cbor<json>(v);
+            CHECK(res.as<std::string>() == std::string("-1.8446744073709551616e+24"));
         }
         JSONCONS_CATCH (const std::exception& e)
         {

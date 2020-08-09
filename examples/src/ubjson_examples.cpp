@@ -111,8 +111,8 @@ namespace {
 
         // Select all values less than 30 with JSONPath
         std::cout << "(3)\n";
-        json result = jsonpath::json_query(j,"$[?(@ < 30)]");
-        std::cout << pretty_print(result) << "\n";
+        json res = jsonpath::json_query(j,"$[?(@ < 30)]");
+        std::cout << pretty_print(res) << "\n";
     }
 
     void working_with_ubjson_2()

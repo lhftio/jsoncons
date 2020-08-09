@@ -27,9 +27,9 @@ void check_parse_cbor(const std::vector<uint8_t>& v, const json& expected)
         cbor_bytes_reader reader(v, decoder);
         reader.read(ec);
 
-        json result = decoder.get_result();
+        json res = decoder.get_result();
 
-        if (!(result == expected))
+        if (!(res == expected))
         {
             std::cout << "v: ";
             for (auto b : v)
@@ -37,12 +37,12 @@ void check_parse_cbor(const std::vector<uint8_t>& v, const json& expected)
                 std::cout << "0x" << std::hex << (int)b;
             }
             std::cout << "\n";
-            std::cout << "result: " << result << "\n";
+            std::cout << "result: " << res << "\n";
             std::cout << "expected: " << expected << "\n";
         }
 
-        REQUIRE(result == expected);
-        CHECK(result.tag() == expected.tag());
+        REQUIRE(res == expected);
+        CHECK(res.tag() == expected.tag());
 
         std::string s;
         for (auto c : v)

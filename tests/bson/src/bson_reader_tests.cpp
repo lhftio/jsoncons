@@ -14,8 +14,8 @@ using namespace jsoncons;
 
 void check_decode_bson(const std::vector<uint8_t>& v, const json& expected)
 {
-    json result = bson::decode_bson<json>(v);
-    REQUIRE(result == expected);
+    json res = bson::decode_bson<json>(v);
+    REQUIRE(res == expected);
 
     std::string s;
     for (auto c : v)

@@ -53,8 +53,8 @@ namespace {
 
         // Select all "rated" with JSONPath
         std::cout << "(3)\n";
-        json result = jsonpath::json_query(j,"$..rated");
-        std::cout << pretty_print(result) << "\n\n";
+        json res = jsonpath::json_query(j,"$..rated");
+        std::cout << pretty_print(res) << "\n\n";
 
         // Serialize back to JSON
         std::cout << "(4)\n" << pretty_print(j) << "\n\n";
