@@ -19,33 +19,33 @@ TEST_CASE("json_const_pointer array tests")
 
     SECTION("size()")
     {
-        json_view v(json_const_pointer_arg, &j);
+        json_view<json> v(json_const_pointer_arg, &j);
         REQUIRE(v.is_array());
         CHECK(v.size() == 3);
         CHECK_FALSE(v.empty());
     }
     SECTION("at()")
     {
-        json_view v(json_const_pointer_arg, &j);
+        json_view<json> v(json_const_pointer_arg, &j);
         REQUIRE(v.is_array());
         REQUIRE_THROWS(v.at(1));
     }
     SECTION("copy")
     {
-        json_view v(json_const_pointer_arg, &j);
-        CHECK(v.storage() == storage_kind::json_const_pointer);
+        json_view<json> v(json_const_pointer_arg, &j);
+        CHECK(v.storage() == view_storage_kind::json_const_pointer);
 
-        json j2(v);
-        CHECK(j2.storage() == storage_kind::array_value);
+        json_view j2(v);
+        CHECK(j2.storage() == view_storage_kind::array_value);
     }
     SECTION("assignment")
     {
-        json_view v(json_const_pointer_arg, &j);
-        CHECK(v.storage() == storage_kind::json_const_pointer);
+        json_view<json> v(json_const_pointer_arg, &j);
+        CHECK(v.storage() == view_storage_kind::json_const_pointer);
 
-        json j2;
+        json_view<json> j2;
         j2 = v;
-        CHECK(j2.storage() == storage_kind::array_value);
+        CHECK(j2.storage() == view_storage_kind::array_value);
     }
 }
 
@@ -55,14 +55,14 @@ TEST_CASE("json_const_pointer object tests")
 
     SECTION("size()")
     {
-        json_view v(json_const_pointer_arg, &j);
+        json_view<json> v(json_const_pointer_arg, &j);
         REQUIRE(v.is_object());
         CHECK(v.size() == 3);
         CHECK_FALSE(v.empty());
     }
     SECTION("at()")
     {
-        json_view v(json_const_pointer_arg, &j);
+        json_view<json> v(json_const_pointer_arg, &j);
         REQUIRE(v.is_object());
         REQUIRE_THROWS(v.at("two"));
         CHECK(v.contains("two"));
@@ -79,7 +79,7 @@ TEST_CASE("json_const_pointer string tests")
 
     SECTION("is_string()")
     {
-        json_view v(json_const_pointer_arg, &j);
+        json_view<json> v(json_const_pointer_arg, &j);
         REQUIRE(v.is_string());
         REQUIRE(v.is_string_view());
 
@@ -94,7 +94,7 @@ TEST_CASE("json_const_pointer byte_string tests")
 
     SECTION("is_byte_string()")
     {
-        json_view v(json_const_pointer_arg, &j);
+        json_view<json> v(json_const_pointer_arg, &j);
         REQUIRE(v.is_byte_string());
         REQUIRE(v.is_byte_string_view());
     }
@@ -107,13 +107,13 @@ TEST_CASE("json_const_pointer bool tests")
 
     SECTION("true")
     {
-        json_view v(json_const_pointer_arg, &tru);
+        json_view<json> v(json_const_pointer_arg, &tru);
         REQUIRE(v.is_bool());
         CHECK(v.as_bool());
     }
     SECTION("false")
     {
-        json_view v(json_const_pointer_arg, &fal);
+        json_view<json> v(json_const_pointer_arg, &fal);
         REQUIRE(v.is_bool());
         CHECK_FALSE(v.as_bool());
     }
@@ -125,7 +125,7 @@ TEST_CASE("json_const_pointer int64 tests")
 
     SECTION("is_int64()")
     {
-        json_view v(json_const_pointer_arg, &j);
+        json_view<json> v(json_const_pointer_arg, &j);
         REQUIRE(v.is_int64());
         CHECK(v.as<int64_t>() == -100);
     }
@@ -137,7 +137,7 @@ TEST_CASE("json_const_pointer uint64 tests")
 
     SECTION("is_uint64()")
     {
-        json_view v(json_const_pointer_arg, &j);
+        json_view<json> v(json_const_pointer_arg, &j);
         REQUIRE(v.is_uint64());
         CHECK(v.as<uint64_t>() == 100);
     }
@@ -149,7 +149,7 @@ TEST_CASE("json_const_pointer half tests")
 
     SECTION("is_half()")
     {
-        json_view v(json_const_pointer_arg, &j);
+        json_view<json> v(json_const_pointer_arg, &j);
         REQUIRE(v.is_half());
         CHECK(v.as<uint16_t>() == 100);
     }
@@ -161,7 +161,7 @@ TEST_CASE("json_const_pointer double tests")
 
     SECTION("is_double()")
     {
-        json_view v(json_const_pointer_arg, &j);
+        json_view<json> v(json_const_pointer_arg, &j);
         REQUIRE(v.is_double());
 
         CHECK(v.as_double() == 123.456);
@@ -170,11 +170,11 @@ TEST_CASE("json_const_pointer double tests")
 
 namespace {
 
-    void flatten(const json& source, 
+    void flatten(const json_view<json>& source, 
                  const std::string& identifier, 
-                 json& result)
+                 json_view<json>& result)
     {
-        json temp(json_array_arg);
+        json_view<json> temp(json_array_arg);
         for (auto& item : source.array_range())
         {
             if (item.is_array())
@@ -235,18 +235,18 @@ TEST_CASE("json_const_pointer identifier tests")
         json target;
         json expected = json::parse("[1,2,4,5,6,8]");
 
-        json_view j1(json_array_arg);
-        json_view j2(json_array_arg);
-        json_view j3(json_array_arg);
+        json_view<json> j1(json_array_arg);
+        json_view<json> j2(json_array_arg);
+        json_view<json> j3(json_array_arg);
         
-        const json_view v1(json_const_pointer_arg, &source.at("reservations"));
+        const json_view<json> v1(json_const_pointer_arg, &source.at("reservations"));
         flatten(v1, "instances", j1);
 
-        const json_view v2(json_const_pointer_arg, &j1);
-        flatten(v2, "foo", j2);
+        //const json_view<json> v2(json_const_pointer_arg, &j1);
+        //flatten(v2, "foo", j2);
 
-        const json_view v3(json_const_pointer_arg, &j2);
-        flatten(v3, "bar", j3);
+        //const json_view<json> v3(json_const_pointer_arg, &j2);
+        //flatten(v3, "bar", j3);
 
         //target = j3;
         
