@@ -26,8 +26,8 @@ namespace jsoncons { namespace jsonpath {
 
     struct slice
     {
-        optional<int64_t> start_;
-        optional<int64_t> stop_;
+        jsoncons::optional<int64_t> start_;
+        jsoncons::optional<int64_t> stop_;
         int64_t step_;
 
         slice()
@@ -35,7 +35,7 @@ namespace jsoncons { namespace jsonpath {
         {
         }
 
-        slice(const optional<int64_t>& start, const optional<int64_t>& end, int64_t step) 
+        slice(const jsoncons::optional<int64_t>& start, const jsoncons::optional<int64_t>& end, int64_t step) 
             : start_(start), stop_(end), step_(step)
         {
         }
@@ -248,6 +248,7 @@ namespace jsoncons { namespace jsonpath {
             {
                 path.swap(other.path);
                 val_ptr = other.val_ptr;
+                return *this;
             }
 
         };
@@ -691,8 +692,6 @@ namespace jsoncons { namespace jsonpath {
                                 }
                                 break;
                             }
-
-                            return;
                         };
                         break;
                     }
@@ -710,7 +709,7 @@ namespace jsoncons { namespace jsonpath {
                             }
                             case '(':
                                 state_stack_.back().state = path_state::arg_or_right_paren;
-                                function_name = std::move(buffer);
+                                function_name = buffer;
                                 buffer.clear();
                                 ++p_;
                                 ++column_;
@@ -877,7 +876,7 @@ namespace jsoncons { namespace jsonpath {
                                     auto temp = resources.create_temp(val);
                                     function_stack_.push_back(std::vector<pointer>{temp});
                                 }
-                                JSONCONS_CATCH(const codec_error&)     
+                                JSONCONS_CATCH(const ser_error&)     
                                 {
                                     ec = jsonpath_errc::argument_parse_error;
                                     return;
@@ -894,7 +893,7 @@ namespace jsoncons { namespace jsonpath {
                                     auto temp = resources.create_temp(val);
                                     function_stack_.push_back(std::vector<pointer>{temp});
                                 }
-                                JSONCONS_CATCH(const codec_error&)     
+                                JSONCONS_CATCH(const ser_error&)     
                                 {
                                     ec = jsonpath_errc::argument_parse_error;
                                     return;
@@ -960,7 +959,7 @@ namespace jsoncons { namespace jsonpath {
                                     auto temp = resources.create_temp(val);
                                     function_stack_.push_back(std::vector<pointer>{temp});
                                 }
-                                JSONCONS_CATCH(const codec_error&)     
+                                JSONCONS_CATCH(const ser_error&)     
                                 {
                                     ec = jsonpath_errc::argument_parse_error;
                                     return;
@@ -979,7 +978,7 @@ namespace jsoncons { namespace jsonpath {
                                     auto temp = resources.create_temp(val);
                                     function_stack_.push_back(std::vector<pointer>{temp});
                                 }
-                                JSONCONS_CATCH(const codec_error&)     
+                                JSONCONS_CATCH(const ser_error&)     
                                 {
                                     ec = jsonpath_errc::argument_parse_error;
                                     return;
@@ -1110,7 +1109,6 @@ namespace jsoncons { namespace jsonpath {
                             case '[':
                                 selectors_.push_back(jsoncons::make_unique<name_selector>(buffer));
                                 apply_selectors(resources);
-                                buffer.clear();
                                 slic.start_ = 0;
                                 buffer.clear();
                                 state_stack_.pop_back();

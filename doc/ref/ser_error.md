@@ -1,4 +1,4 @@
-### jsoncons::codec_error
+### jsoncons::ser_error
 
 ```c++
 #include <jsoncons/json_exception.hpp>
@@ -6,23 +6,23 @@
 
 <br>
 
-`jsoncons::codec_error` defines an exception type for reporting serialization and deserialization failures.
+`jsoncons::ser_error` defines an exception type for reporting serialization and deserialization failures.
 
-![codec_error](./diagrams/codec_error.png)
+![ser_error](./diagrams/ser_error.png)
 
 std::exception
 
 #### Constructors
 
-    codec_error(std::error_code ec);
+    ser_error(std::error_code ec);
 
-    codec_error(std::error_code ec, std::size_t position);
+    ser_error(std::error_code ec, std::size_t position);
 
-    codec_error(std::error_code ec,
+    ser_error(std::error_code ec,
                         std::size_t line,
                         std::size_t column);
 
-    codec_error(const codec_error& other);
+    ser_error(const ser_error& other);
 
 #### Member functions
 
@@ -34,7 +34,7 @@ Line numbers start at 1.
 Returns the column number to the end of the text where the exception occurred.
 Column numbers start at 1.
 
-    const char* what() const
+    const char* what() const noexcept
 Constructs an error message, including line and column position
 
 #### Inherited from std::system_error
@@ -56,9 +56,9 @@ int main()
     {
         jsoncons::json j = jsoncons::json::parse(s);
     } 
-    catch(const jsoncons::codec_error& e) 
+    catch(const jsoncons::ser_error& e) 
     {
-        std::cout << "Caught codec_error with category " 
+        std::cout << "Caught ser_error with category " 
                   << e.code().category().name() 
                   << ", code " << e.code().value() 
                   << " and message " << e.what() << std::endl;
@@ -68,5 +68,5 @@ int main()
 
 Output:
 ```
-Caught codec_error with category json_input, code 1 and message Unexpected value separator ',' at line 1 and column 10
+Caught ser_error with category json_input, code 1 and message Unexpected value separator ',' at line 1 and column 10
 ```

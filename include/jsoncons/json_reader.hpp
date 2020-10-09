@@ -34,7 +34,7 @@ private:
     //std::function<bool(json_errc,const ser_context&)> err_handler_;
 
     // noncopyable and nonmoveable
-    json_utf8_to_other_visitor_adaptor<CharT>(const json_utf8_to_other_visitor_adaptor<CharT>&) = delete;
+    json_utf8_to_other_visitor_adaptor(const json_utf8_to_other_visitor_adaptor<CharT>&) = delete;
     json_utf8_to_other_visitor_adaptor<CharT>& operator=(const json_utf8_to_other_visitor_adaptor<CharT>&) = delete;
 
 public:
@@ -85,7 +85,7 @@ private:
             unicons::conv_flags::strict);
         if (result.ec != unicons::conv_errc())
         {
-            JSONCONS_THROW(codec_error(result.ec,context.line(),context.column()));
+            JSONCONS_THROW(ser_error(result.ec,context.line(),context.column()));
         }
         return other_visitor_.key(target, context, ec);
     }
@@ -153,7 +153,7 @@ class basic_json_reader
 public:
     using char_type = CharT;
     using source_type = Src;
-    using string_view_type = basic_string_view<CharT>;
+    using string_view_type = jsoncons::basic_string_view<CharT>;
     using temp_allocator_type = Allocator;
 private:
     typedef typename std::allocator_traits<temp_allocator_type>:: template rebind_alloc<CharT> char_allocator_type;
@@ -268,7 +268,7 @@ public:
                       const basic_json_decode_options<CharT>& options,
                       std::function<bool(json_errc,const ser_context&)> err_handler, 
                       const Allocator& alloc = Allocator(),
-                      typename std::enable_if<!std::is_constructible<basic_string_view<CharT>,Source>::value>::type* = 0)
+                      typename std::enable_if<!std::is_constructible<jsoncons::basic_string_view<CharT>,Source>::value>::type* = 0)
        : visitor_(visitor),
          parser_(options,err_handler,alloc),
          source_(std::forward<Source>(source)),
@@ -286,7 +286,7 @@ public:
                       const basic_json_decode_options<CharT>& options,
                       std::function<bool(json_errc,const ser_context&)> err_handler, 
                       const Allocator& alloc = Allocator(),
-                      typename std::enable_if<std::is_constructible<basic_string_view<CharT>,Source>::value>::type* = 0)
+                      typename std::enable_if<std::is_constructible<jsoncons::basic_string_view<CharT>,Source>::value>::type* = 0)
        : visitor_(visitor),
          parser_(options,err_handler,alloc),
          eof_(false),
@@ -294,11 +294,11 @@ public:
          buffer_length_(0),
          buffer_(alloc)
     {
-        basic_string_view<CharT> sv(std::forward<Source>(source));
+        jsoncons::basic_string_view<CharT> sv(std::forward<Source>(source));
         auto result = unicons::skip_bom(sv.begin(), sv.end());
         if (result.ec != unicons::encoding_errc())
         {
-            JSONCONS_THROW(codec_error(result.ec,parser_.line(),parser_.column()));
+            JSONCONS_THROW(ser_error(result.ec,parser_.line(),parser_.column()));
         }
         std::size_t offset = result.it - sv.begin();
         parser_.update(sv.data()+offset,sv.size()-offset);
@@ -333,7 +333,7 @@ public:
         read_next(ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec,parser_.line(),parser_.column()));
+            JSONCONS_THROW(ser_error(ec,parser_.line(),parser_.column()));
         }
     }
 
@@ -391,7 +391,7 @@ public:
         check_done(ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec,parser_.line(),parser_.column()));
+            JSONCONS_THROW(ser_error(ec,parser_.line(),parser_.column()));
         }
     }
 

@@ -195,6 +195,7 @@ public:
          line_(1),
          position_(0),
          mark_position_(0),
+         saved_position_(0),
          begin_input_(nullptr),
          input_end_(nullptr),
          input_ptr_(nullptr),
@@ -463,7 +464,7 @@ public:
         check_done(ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec,line_,column()));
+            JSONCONS_THROW(ser_error(ec,line_,column()));
         }
     }
 
@@ -514,7 +515,7 @@ public:
         parse_some(visitor, ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec,line_,column()));
+            JSONCONS_THROW(ser_error(ec,line_,column()));
         }
     }
 
@@ -529,7 +530,7 @@ public:
         finish_parse(visitor, ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec,line_,column()));
+            JSONCONS_THROW(ser_error(ec,line_,column()));
         }
     }
 
@@ -2567,7 +2568,7 @@ escape_u8:
         finish_parse(visitor, ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec,line_,column()));
+            JSONCONS_THROW(ser_error(ec,line_,column()));
         }
     }
 
@@ -2687,7 +2688,7 @@ private:
         {
         case json_parse_state::member_name:
             more_ = visitor.key(sv, *this, ec);
-            state_ = pop_state();
+            pop_state();
             state_ = json_parse_state::expect_colon;
             break;
         case json_parse_state::object:

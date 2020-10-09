@@ -505,7 +505,7 @@ TEST_CASE("oss-fuzz issues")
         try {
            json j2 = ubjson::decode_ubjson<json>(is);
         }
-        catch(const jsoncons::codec_error&) 
+        catch(const jsoncons::ser_error&) 
         {
             //std::cout << e.what() << "\n\n";
         }
@@ -545,6 +545,21 @@ TEST_CASE("oss-fuzz issues")
         std::error_code ec;
         reader.read(ec);
         CHECK(ec == ubjson::ubjson_errc::unknown_type);
+    }
+
+    // Fuzz target: fuzz_ubjson
+    // Issue: failed_throw
+    SECTION("issue 25891")
+    {
+        std::string pathname = "fuzz_regression/input/clusterfuzz-testcase-minimized-fuzz_ubjson-5751108612653056";
+
+        std::ifstream is(pathname, std::ios_base::in | std::ios_base::binary);
+        CHECK(is);
+
+        try {
+           json j2 = ubjson::decode_ubjson<json>(is);
+        }
+        catch(const jsoncons::ser_error&) {}
     }
 }
 

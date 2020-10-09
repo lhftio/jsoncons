@@ -533,6 +533,8 @@ private:
             std::memcpy(data_,val.data_,val.length_*sizeof(char_type));
             data_[length_] = 0;
         }
+       
+        short_string_storage& operator=(const short_string_storage& val) = delete;
 
         uint8_t length() const
         {
@@ -568,20 +570,20 @@ private:
         }
 
         long_string_storage(const long_string_storage& val)
-            : storage_(val.storage_), tag_(val.tag_),
+            : storage_(val.storage_), length_(0), tag_(val.tag_),
               s_(val.s_)
         {
         }
 
         long_string_storage(long_string_storage&& val) noexcept
-            : storage_(val.storage_), tag_(val.tag_),
+            : storage_(val.storage_), length_(0), tag_(val.tag_),
               s_(nullptr)
         {
             swap(val);
         }
 
         long_string_storage(const long_string_storage& val, const Allocator& a)
-            : storage_(val.storage_), tag_(val.tag_),
+            : storage_(val.storage_), length_(0), tag_(val.tag_),
               s_(val.s_, a)
         {
         }
@@ -589,6 +591,10 @@ private:
         ~long_string_storage() noexcept
         {
         }
+
+        long_string_storage& operator=(const long_string_storage& val) = delete;
+
+        long_string_storage& operator=(long_string_storage&& val) noexcept = delete;
 
         void swap(long_string_storage& val) noexcept
         {
@@ -634,20 +640,20 @@ private:
         }
 
         byte_string_storage(const byte_string_storage& val)
-            : storage_(val.storage_), tag_(val.tag_),
+            : storage_(val.storage_), length_(0), tag_(val.tag_),
               s_(val.s_)
         {
         }
 
         byte_string_storage(byte_string_storage&& val) noexcept
-            : storage_(val.storage_), tag_(val.tag_),
+            : storage_(val.storage_), length_(0), tag_(val.tag_),
               s_(nullptr)
         {
             swap(val);
         }
 
         byte_string_storage(const byte_string_storage& val, const Allocator& a)
-            : storage_(val.storage_), tag_(val.tag_),
+            : storage_(val.storage_), length_(0), tag_(val.tag_),
               s_(val.s_, a)
         {
         }
@@ -830,7 +836,7 @@ private:
         }
 
         explicit object_storage(const object_storage& val, const Allocator& a)
-            : storage_(val.storage_), tag_(val.tag_)
+            : storage_(val.storage_), length_(0), tag_(val.tag_)
         {
             create(object_allocator(a), *(val.ptr_), a);
         }
@@ -2452,7 +2458,7 @@ public:
                 byte_string_type v = convert.from(as_string_view(),tag(),ec);
                 if (ec)
                 {
-                    JSONCONS_THROW(codec_error(ec));
+                    JSONCONS_THROW(ser_error(ec));
                 }
                 return v;
             }
@@ -2856,7 +2862,7 @@ public:
         auto result = unicons::skip_bom(s.begin(), s.end());
         if (result.ec != unicons::encoding_errc())
         {
-            JSONCONS_THROW(codec_error(result.ec));
+            JSONCONS_THROW(ser_error(result.ec));
         }
         std::size_t offset = result.it - s.begin();
         parser.update(s.data()+offset,s.size()-offset);
@@ -2883,13 +2889,13 @@ public:
                             const basic_json_decode_options<char_type>& options = basic_json_decode_options<char_type>(), 
                             std::function<bool(json_errc,const ser_context&)> err_handler = default_json_parsing())
     {
-        return parse(basic_string_view<char_type>(s), options, err_handler);
+        return parse(jsoncons::basic_string_view<char_type>(s), options, err_handler);
     }
 
     static basic_json parse(const char_type* s, 
                             std::function<bool(json_errc,const ser_context&)> err_handler)
     {
-        return parse(basic_string_view<char_type>(s), basic_json_decode_options<char_type>(), err_handler);
+        return parse(jsoncons::basic_string_view<char_type>(s), basic_json_decode_options<char_type>(), err_handler);
     }
 
     // from stream
@@ -3266,7 +3272,7 @@ public:
                const Allocator& alloc = Allocator(),
                typename std::enable_if<jsoncons::detail::is_byte_sequence<Source>::value,int>::type = 0)
     {
-        auto bytes = span<const uint8_t>(reinterpret_cast<const uint8_t*>(source.data()), source.size());
+        auto bytes = jsoncons::span<const uint8_t>(reinterpret_cast<const uint8_t*>(source.data()), source.size());
         construct<byte_string_storage>(tag, bytes.data(), bytes.size(), 0, alloc);
     }
 
@@ -3276,7 +3282,7 @@ public:
                const Allocator& alloc = Allocator(),
                typename std::enable_if<jsoncons::detail::is_byte_sequence<Source>::value,int>::type = 0)
     {
-        auto bytes = span<const uint8_t>(reinterpret_cast<const uint8_t*>(source.data()), source.size());
+        auto bytes = jsoncons::span<const uint8_t>(reinterpret_cast<const uint8_t*>(source.data()), source.size());
         construct<byte_string_storage>(semantic_tag::ext, bytes.data(), bytes.size(), ext_tag, alloc);
     }
 
@@ -3339,7 +3345,7 @@ public:
         dump(s, options, ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec));
+            JSONCONS_THROW(ser_error(ec));
         }
     }
 
@@ -3352,7 +3358,7 @@ public:
         dump_pretty(s, options, ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec));
+            JSONCONS_THROW(ser_error(ec));
         }
     }
 
@@ -3363,7 +3369,7 @@ public:
         dump(os, options, ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec));
+            JSONCONS_THROW(ser_error(ec));
         }
     }
 
@@ -3374,7 +3380,7 @@ public:
         dump_pretty(os, options, ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec));
+            JSONCONS_THROW(ser_error(ec));
         }
     }
 
@@ -3390,7 +3396,7 @@ public:
         dump(s, line_indent, ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec));
+            JSONCONS_THROW(ser_error(ec));
         }
     }
 
@@ -3405,7 +3411,7 @@ public:
         dump(s, options, line_indent, ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec));
+            JSONCONS_THROW(ser_error(ec));
         }
     }
 
@@ -3417,7 +3423,7 @@ public:
         dump(os, line_indent, ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec));
+            JSONCONS_THROW(ser_error(ec));
         }
     }
 
@@ -3430,7 +3436,7 @@ public:
         dump(os, options, line_indent, ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec));
+            JSONCONS_THROW(ser_error(ec));
         }
     }
 
@@ -3442,7 +3448,7 @@ public:
         dump(visitor, ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec));
+            JSONCONS_THROW(ser_error(ec));
         }
     }
 
@@ -3998,7 +4004,7 @@ public:
                         T v = convert.from(as_string_view(),tag(),ec);
                         if (ec)
                         {
-                            JSONCONS_THROW(codec_error(ec));
+                            JSONCONS_THROW(ser_error(ec));
                         }
                         return v;
                     }
@@ -4007,7 +4013,7 @@ public:
                         T v = convert.from(as_string_view(), hint, ec);
                         if (ec)
                         {
-                            JSONCONS_THROW(codec_error(ec));
+                            JSONCONS_THROW(ser_error(ec));
                         }
                         return T(v.begin(),v.end());
                     }
@@ -4204,7 +4210,7 @@ public:
                 auto s = convert.from(as_byte_string_view(), tag(), alloc, ec);
                 if (ec)
                 {
-                    JSONCONS_THROW(codec_error(ec));
+                    JSONCONS_THROW(ser_error(ec));
                 }
                 return s;
             }
@@ -5017,19 +5023,17 @@ public:
     {
         switch (encoding_hint)
         {
-            {
-                case byte_string_chars_format::base16:
-                    *this = basic_json(bytes, semantic_tag::base16);
-                    break;
-                case byte_string_chars_format::base64:
-                    *this = basic_json(bytes, semantic_tag::base64);
-                    break;
-                case byte_string_chars_format::base64url:
-                    *this = basic_json(bytes, semantic_tag::base64url);
-                    break;
-                default:
-                    break;
-            }
+            case byte_string_chars_format::base16:
+                *this = basic_json(bytes, semantic_tag::base16);
+                break;
+            case byte_string_chars_format::base64:
+                *this = basic_json(bytes, semantic_tag::base64);
+                break;
+            case byte_string_chars_format::base64url:
+                *this = basic_json(bytes, semantic_tag::base64url);
+                break;
+            default:
+                break;
         }
     }
 

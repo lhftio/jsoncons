@@ -27,7 +27,7 @@ void json_filter_examples();
 void json_parser_examples();
 void json_reader_examples();
 void json_traits_macros_examples();
-void json_traits_macros_named_examples();
+void json_traits_name_macro_examples();
 void jsonpatch_examples();
 void jsonpath_examples();
 void jsonpointer_examples();
@@ -48,6 +48,7 @@ void update_json_in_place_examples();
 void json_traits_tuple_examples();
 void json_traits_bitset_examples();
 void json_traits_integer_examples();
+void json_traits_polymorphic_examples();
 
 void comment_example()
 {
@@ -61,15 +62,16 @@ void comment_example()
     )";
 
     // Default
-    json j = json::parse(s);
-    std::cout << "(1) " << j << std::endl;
-
+    {
+        json j = json::parse(s);
+        std::cout << "(1) " << j << std::endl;
+    }
     // Strict
     try
     {
         json j = json::parse(s, strict_json_parsing());
     }
-    catch (const codec_error& e)
+    catch (const ser_error& e)
     {
         std::cout << "(2) " << e.what() << std::endl;
     }
@@ -164,7 +166,7 @@ void first_example_c()
             book.get_value_or<json>("price", "N/A").dump(price,options);
             std::cout << author << ", " << title << ", " << price << std::endl;
         }
-        catch (const codec_error& e)
+        catch (const ser_error& e)
         {
             std::cerr << e.what() << std::endl;
         }
@@ -274,9 +276,9 @@ void parse_error_example()
     {
         jsoncons::json val = jsoncons::json::parse(s);
     } 
-    catch(const jsoncons::codec_error& e) 
+    catch(const jsoncons::ser_error& e) 
     {
-        std::cout << "Caught codec_error with category " << e.code().category().name() 
+        std::cout << "Caught ser_error with category " << e.code().category().name() 
                   << ", code " << e.code().value() 
                   << " and message " << e.what() << std::endl;
     }
@@ -314,7 +316,7 @@ void max_nesting_path_example()
         options.max_nesting_depth(20);
         json::parse(s, options);
     }
-    catch (const codec_error& e)
+    catch (const ser_error& e)
     {
          std::cout << e.what() << std::endl;
     }
@@ -418,8 +420,6 @@ int main()
 
         json_traits_macros_examples();
 
-        json_traits_macros_named_examples();
-
         run_cbor_typed_array_examples();
 
         data_model_examples();
@@ -435,8 +435,6 @@ int main()
         run_cbor_typed_array_examples();
 
         jmespath_examples();
-
-        json_traits_variant_examples();
 
         bson_examples();
 
@@ -457,6 +455,12 @@ int main()
         json_traits_bitset_examples();
 
         json_traits_integer_examples();
+
+        json_traits_name_macro_examples();
+
+        json_traits_polymorphic_examples();
+
+        json_traits_variant_examples();
     }
     catch (const std::exception& e)
     {

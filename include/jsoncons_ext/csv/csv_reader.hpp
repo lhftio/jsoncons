@@ -108,7 +108,7 @@ public:
                      const basic_csv_decode_options<CharT>& options,
                      std::function<bool(csv_errc,const ser_context&)> err_handler, 
                      const Allocator& alloc = Allocator(),
-                     typename std::enable_if<!std::is_constructible<basic_string_view<CharT>,Source>::value>::type* = 0)
+                     typename std::enable_if<!std::is_constructible<jsoncons::basic_string_view<CharT>,Source>::value>::type* = 0)
        : visitor_(visitor),
          parser_(options, err_handler, alloc),
          source_(std::forward<Source>(source)),
@@ -126,7 +126,7 @@ public:
                      const basic_csv_decode_options<CharT>& options,
                      std::function<bool(csv_errc,const ser_context&)> err_handler, 
                      const Allocator& alloc = Allocator(),
-                     typename std::enable_if<std::is_constructible<basic_string_view<CharT>,Source>::value>::type* = 0)
+                     typename std::enable_if<std::is_constructible<jsoncons::basic_string_view<CharT>,Source>::value>::type* = 0)
        : visitor_(visitor),
          parser_(options, err_handler, alloc),
          buffer_length_(0),
@@ -138,7 +138,7 @@ public:
         auto result = unicons::skip_bom(sv.begin(), sv.end());
         if (result.ec != unicons::encoding_errc())
         {
-            JSONCONS_THROW(codec_error(result.ec,parser_.line(),parser_.column()));
+            JSONCONS_THROW(ser_error(result.ec,parser_.line(),parser_.column()));
         }
         std::size_t offset = result.it - sv.begin();
         parser_.update(sv.data()+offset,sv.size()-offset);
@@ -152,13 +152,23 @@ public:
         read(ec);
         if (ec)
         {
-            JSONCONS_THROW(codec_error(ec,parser_.line(),parser_.column()));
+            JSONCONS_THROW(ser_error(ec,parser_.line(),parser_.column()));
         }
     }
 
     void read(std::error_code& ec)
     {
         read_internal(ec);
+    }
+
+    std::size_t line() const
+    {
+        return parser_.line();
+    }
+
+    std::size_t column() const
+    {
+        return parser_.column();
     }
 
     bool eof() const

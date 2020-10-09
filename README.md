@@ -972,6 +972,8 @@ On UNIX:
 
 ## Acknowledgements
 
+jsoncons uses the PVS-Studio static analyzer, provided free for open source projects.
+
 A big thanks to the comp.lang.c++ community for help with implementation details. 
 
 The jsoncons platform dependent binary configuration draws on to the excellent MIT licensed [tinycbor](https://github.com/intel/tinycbor).
@@ -980,7 +982,7 @@ Thanks to Milo Yip, author of [RapidJSON](http://rapidjson.org/), for raising th
 
 The jsoncons implementation of the Grisu3 algorithm for printing floating-point numbers follows Florian Loitsch's MIT licensed [grisu3_59_56 implementation](http://florian.loitsch.com/publications), with minor modifications. 
 
-The macro `JSONCONS_ALL_MEMBER_TRAITS` was inspired by Martin York's [ThorsSerializer](https://github.com/Loki-Astari/ThorsSerializer)
+The macro `JSONCONS_ALL_MEMBER_TRAITS` follows the approach taken by Martin York's [ThorsSerializer](https://github.com/Loki-Astari/ThorsSerializer)
 
 Special thanks to our [contributors](https://github.com/danielaparker/jsoncons/blob/master/acknowledgements.md)
  
