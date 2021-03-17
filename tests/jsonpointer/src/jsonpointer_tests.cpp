@@ -18,7 +18,7 @@
 using namespace jsoncons;
 using namespace jsoncons::literals;
 
-void check_get_with_const_ref(const json& example, const std::string& pointer, const json& expected)
+/*void check_get_with_const_ref(const json& example, const std::string& pointer, const json& expected)
 {
 
     std::error_code ec;
@@ -30,6 +30,12 @@ void check_get_with_const_ref(const json& example, const std::string& pointer, c
 void check_contains(const json& example, const std::string& pointer, bool expected)
 {
     bool result = jsonpointer::contains(example,pointer);
+    if (result != expected)
+    {
+        std::cout << "contains failed\n";
+        std::cout << "    given: " << example << "\n";
+        std::cout << "    pointer: " << pointer << "\n";
+    }
     CHECK(result == expected);
 }
 
@@ -235,7 +241,7 @@ TEST_CASE("jsonpointer path tests")
 {
     SECTION("/a~1b")
     {
-        jsonpointer::json_ptr ptr("/a~1b");
+        jsonpointer::json_pointer ptr("/a~1b");
 
         auto it = ptr.begin();
         auto end = ptr.end();
@@ -246,7 +252,7 @@ TEST_CASE("jsonpointer path tests")
     }
     SECTION("/a~1b")
     {
-        jsonpointer::json_ptr ptr("/m~0n");
+        jsonpointer::json_pointer ptr("/m~0n");
 
         auto it = ptr.begin();
         auto end = ptr.end();
@@ -257,7 +263,7 @@ TEST_CASE("jsonpointer path tests")
     }
     SECTION("/0/1")
     {
-        jsonpointer::json_ptr ptr("/0/1");
+        jsonpointer::json_pointer ptr("/0/1");
 
         auto it = ptr.begin();
         auto end = ptr.end();
@@ -282,7 +288,7 @@ TEST_CASE("jsonpointer concatenation")
 
     SECTION("path append a/b")
     {
-        jsonpointer::json_ptr ptr;
+        jsonpointer::json_pointer ptr;
         ptr /= "a/b";
         ptr /= "0";
 
@@ -295,16 +301,17 @@ TEST_CASE("jsonpointer concatenation")
 
         std::error_code ec;
         json j = jsonpointer::get(example, ptr, ec);
-        std::cout << j << "\n";
+        //std::cout << j << "\n";
+        CHECK(j == json("bar"));
     }
 
     SECTION("concatenate two paths")
     {
-        jsonpointer::json_ptr ptr1;
+        jsonpointer::json_pointer ptr1;
         ptr1 /= "m~n";
-        jsonpointer::json_ptr ptr2;
+        jsonpointer::json_pointer ptr2;
         ptr2 /= "1";
-        jsonpointer::json_ptr ptr = ptr1 + ptr2;
+        jsonpointer::json_pointer ptr = ptr1 + ptr2;
 
         auto it = ptr.begin();
         auto end = ptr.end();
@@ -314,7 +321,8 @@ TEST_CASE("jsonpointer concatenation")
         CHECK(it == end);
 
         json j = jsonpointer::get(example, ptr);
-        std::cout << j << "\n";
+        CHECK(j == json("qux"));
+        //std::cout << j << "\n";
     }
 }
 
@@ -332,5 +340,143 @@ TEST_CASE("[jsonpointer] Inserting object after deleting it")
 
     jsonpointer::add( oj, "/t", ojson(), ec );
     CHECK(oj.size() == 1);
+}*/
+
+TEST_CASE("[jsonpointer] create_if_missing")
+{
+    /* SECTION("get from empty")
+    {
+        std::vector<std::string> keys = {"foo","bar","baz"};
+
+        jsonpointer::json_pointer ptr;
+        for (const auto& key : keys)
+        {
+            ptr /= key;
+        }
+
+        json doc;
+        json result = jsonpointer::get(doc, ptr, true);
+
+        json expected = json::parse(R"({"foo":{"bar":{"baz":{}}}})");
+
+        CHECK(doc == expected);
+        CHECK(result == json());
+    }
+    SECTION("get from non-empty")
+    {
+        std::vector<std::string> keys = {"foo","bar","baz"};
+
+        jsonpointer::json_pointer ptr;
+        for (const auto& key : keys)
+        {
+            ptr /= key;
+        }
+
+        json doc = json::parse(R"({"foo":{}})");
+        json result = jsonpointer::get(doc, ptr, true);
+
+        json expected = json::parse(R"({"foo":{"bar":{"baz":{}}}})");
+
+        CHECK(doc == expected);
+        CHECK(result == json());
+    }
+    SECTION("add into empty")
+    {
+        std::vector<std::string> keys = {"foo","bar","baz"};
+
+        jsonpointer::json_pointer ptr;
+        for (const auto& key : keys)
+        {
+            ptr /= key;
+        }
+
+        json doc;
+        jsonpointer::add(doc, ptr, "str", true);
+
+        json expected = json::parse(R"({"foo":{"bar":{"baz":"str"}}})");
+
+        CHECK(doc == expected);
+    }
+    SECTION("add into non-empty")
+    {
+        std::vector<std::string> keys = {"foo","bar","baz"};
+
+        jsonpointer::json_pointer ptr;
+        for (const auto& key : keys)
+        {
+            ptr /= key;
+        }
+
+        json doc = json::parse(R"({"foo":{}})");
+        jsonpointer::add(doc, ptr, "str", true);
+
+        json expected = json::parse(R"({"foo":{"bar":{"baz":"str"}}})");
+
+        CHECK(doc == expected);
+    }
+    SECTION("add_if_absent into empty")
+    {
+        std::vector<std::string> keys = { "foo","bar","baz" };
+
+        jsonpointer::json_pointer ptr;
+        for (const auto& key : keys)
+        {
+            ptr /= key;
+        }
+
+        json doc;
+        jsonpointer::add_if_absent(doc, ptr, "str", true);
+        json expected = json::parse(R"({"foo":{"bar":{"baz":"str"}}})");
+        CHECK(doc == expected);
+    }
+    SECTION("add_if_absent into non-empty")
+    {
+        std::vector<std::string> keys = { "foo","bar","baz" };
+
+        jsonpointer::json_pointer ptr;
+        for (const auto& key : keys)
+        {
+            ptr /= key;
+        }
+
+        json doc = json::parse(R"({"foo":{}})");
+        jsonpointer::add_if_absent(doc, ptr, "str", true);
+        json expected = json::parse(R"({"foo":{"bar":{"baz":"str"}}})");
+        CHECK(doc == expected);
+    }
+    SECTION("replace into empty")
+    {
+        std::vector<std::string> keys = {"foo","bar","baz"};
+
+        jsonpointer::json_pointer ptr;
+        for (const auto& key : keys)
+        {
+            ptr /= key;
+        }
+
+        json doc;
+        jsonpointer::replace(doc, ptr, "str", true);
+
+        json expected = json::parse(R"({"foo":{"bar":{"baz":"str"}}})");
+
+        CHECK(doc == expected);
+    }
+    SECTION("replace into non-empty")
+    {
+        std::vector<std::string> keys = {"foo","bar","baz"};
+
+        jsonpointer::json_pointer ptr;
+        for (const auto& key : keys)
+        {
+            ptr /= key;
+        }
+
+        json doc = json::parse(R"({"foo":{}})");
+        jsonpointer::replace(doc, ptr, "str", true);
+
+        json expected = json::parse(R"({"foo":{"bar":{"baz":"str"}}})");
+
+        CHECK(doc == expected);
+    }*/
 }
 

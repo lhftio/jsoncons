@@ -133,7 +133,7 @@ namespace {
         )");
 
         std::error_code ec;
-        jsonpointer::insert(target, "/baz", json("qux"), ec);
+        jsonpointer::add_if_absent(target, "/baz", json("qux"), ec);
         if (ec)
         {
             std::cout << ec.message() << std::endl;
@@ -151,7 +151,7 @@ namespace {
         )");
 
         std::error_code ec;
-        jsonpointer::insert(target, "/foo/1", json("qux"), ec);
+        jsonpointer::add_if_absent(target, "/foo/1", json("qux"), ec);
         if (ec)
         {
             std::cout << ec.message() << std::endl;
@@ -169,7 +169,7 @@ namespace {
         )");
 
         std::error_code ec;
-        jsonpointer::insert(target, "/foo/-", json("qux"), ec);
+        jsonpointer::add_if_absent(target, "/foo/-", json("qux"), ec);
         if (ec)
         {
             std::cout << ec.message() << std::endl;
@@ -187,7 +187,7 @@ namespace {
         )");
 
         std::error_code ec;
-        jsonpointer::insert(target, "/baz", json("qux"), ec);
+        jsonpointer::add_if_absent(target, "/baz", json("qux"), ec);
         if (ec)
         {
             std::cout << ec.message() << std::endl;
@@ -377,7 +377,7 @@ namespace {
            }
         )");
 
-        jsonpointer::json_ptr ptr;
+        jsonpointer::json_pointer ptr;
         ptr /= "m~n";
         ptr /= "1";
 
@@ -396,7 +396,7 @@ namespace {
 
     void jsonpointer_address_iterator_example()
     {
-        jsonpointer::json_ptr ptr("/store/book/1/author");
+        jsonpointer::json_pointer ptr("/store/book/1/author");
 
         std::cout << "(1) " << ptr << "\n\n";
 
@@ -411,7 +411,7 @@ namespace {
 
     void jsonpointer_address_append_tokens()
     {
-        jsonpointer::json_ptr ptr;
+        jsonpointer::json_pointer ptr;
 
         ptr /= "a/b";
         ptr /= "";
@@ -430,9 +430,9 @@ namespace {
 
     void jsonpointer_address_concatenate()
     {
-        jsonpointer::json_ptr ptr("/a~1b");
+        jsonpointer::json_pointer ptr("/a~1b");
 
-        ptr += jsonpointer::json_ptr("//m~0n");
+        ptr += jsonpointer::json_pointer("//m~0n");
 
         std::cout << "(1) " << ptr << "\n\n";
 
@@ -503,6 +503,70 @@ namespace {
             jsonpointer::unflatten_options::assume_object);
         std::cout << "(3)\n" << pretty_print(unflattened2) << "\n";
     }
+
+    void get_with_create_if_missing()
+    {
+        std::vector<std::string> keys = {"foo","bar","baz"};
+
+        jsonpointer::json_pointer ptr;
+        for (const auto& key : keys)
+        {
+            ptr /= key;
+        }
+
+        json doc;
+        json result = jsonpointer::get(doc, ptr, true);
+
+        std::cout << pretty_print(doc) << "\n\n";
+    }
+
+    void add_with_create_if_missing()
+    {
+        std::vector<std::string> keys = {"foo","bar","baz"};
+
+        jsonpointer::json_pointer ptr;
+        for (const auto& key : keys)
+        {
+            ptr /= key;
+        }
+
+        json doc;
+        jsonpointer::add(doc, ptr, "str", true);
+
+        std::cout << pretty_print(doc) << "\n\n";
+    }
+
+    void add_if_absent_with_create_if_missing()
+    {
+        std::vector<std::string> keys = { "foo","bar","baz" };
+
+        jsonpointer::json_pointer ptr;
+        for (const auto& key : keys)
+        {
+            ptr /= key;
+        }
+
+        json doc;
+        jsonpointer::add_if_absent(doc, ptr, "str", true);
+
+        std::cout << pretty_print(doc) << "\n\n";
+    }
+
+    void replace_with_create_if_missing()
+    {
+        std::vector<std::string> keys = {"foo","bar","baz"};
+
+        jsonpointer::json_pointer ptr;
+        for (const auto& key : keys)
+        {
+            ptr /= key;
+        }
+
+        json doc;
+        jsonpointer::replace(doc, ptr, "str", true);
+
+        std::cout << pretty_print(doc) << "\n\n";
+    }
 } // namespace
 
 void jsonpointer_examples()
@@ -529,5 +593,9 @@ void jsonpointer_examples()
     jsonpointer_address_concatenate();
     flatten_and_unflatten();
     flatten_and_unflatten2();
+    get_with_create_if_missing();
+    add_with_create_if_missing();
+    add_if_absent_with_create_if_missing();
+    replace_with_create_if_missing();
 }
 

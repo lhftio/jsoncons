@@ -8,6 +8,7 @@
 #define JSONCONS_CONFIG_JSONCONS_CONFIG_HPP
 
 #include <type_traits>
+#include <limits>
 #include <jsoncons/config/compiler_support.hpp>
 #include <jsoncons/config/binary_config.hpp>
 
@@ -104,7 +105,7 @@ namespace jsoncons {
 
     template<class T>
     typename unique_if<T>::value_is_array_of_unknown_bound
-    make_unique(size_t n) 
+    make_unique(std::size_t n) 
     {
         using U = typename std::remove_extent<T>::type;
         return std::unique_ptr<T>(new U[n]());
@@ -253,6 +254,14 @@ namespace detail {
 
 #define JSONCONS_CSTRING(CharT, name, ...) \
     static constexpr CharT name[] = { __VA_ARGS__,0};
+
+#if defined(__clang__) 
+#define JSONCONS_HAS_STD_REGEX 1
+#elif (defined(__GNUC__) && (__GNUC__ == 4)) && (defined(__GNUC__) && __GNUC_MINOR__ < 9)
+// GCC 4.8 has broken regex support: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53631
+#else
+#define JSONCONS_HAS_STD_REGEX 1
+#endif
 
 #endif // JSONCONS_CONFIG_JSONCONS_CONFIG_HPP
 

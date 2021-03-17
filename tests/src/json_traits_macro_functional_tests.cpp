@@ -878,8 +878,8 @@ namespace ns {
     const std::string Circle_NMN::type_ = "circle";
 
     const auto rectangle_marker = [](double) noexcept {return "rectangle"; };
-    const auto triangle_marker = [](double) noexcept {return "triangle";};
-    const auto circle_marker = [](double) noexcept {return "circle";};
+    //const auto triangle_marker = [](double) noexcept {return "triangle";};
+    //const auto circle_marker = [](double) noexcept {return "circle";};
           
 } // namespace
 } // ns
@@ -1253,8 +1253,7 @@ TEST_CASE("JSONCONS_ALL_MEMBER_NAME_TRAITS transform tests")
     }
 } 
 
-#if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ < 9))
-// GCC 4.8 has broken regex support: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53631
+#if defined(JSONCONS_HAS_STD_REGEX)
 TEST_CASE("JSONCONS_N_CTOR_GETTER_NAME_TRAITS validation tests")
 {
     SECTION("test 1")

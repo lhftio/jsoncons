@@ -12,7 +12,7 @@ Fully compliant. The jsoncons implementation passes all [compliance tests](https
 <table border="0">
   <tr>
     <td><a href="jmespath_expression.md">jmespath_expression</a></td>
-    <td>Represents the compiled form of a JMESPath expression.</td> 
+    <td>Represents the compiled form of a JMESPath string.</td> 
   </tr>
 </table>
 
@@ -22,6 +22,10 @@ Fully compliant. The jsoncons implementation passes all [compliance tests](https
   <tr>
     <td><a href="search.md">search</a></td>
     <td>Searches for all values that match a JMESPath expression</td> 
+  </tr>
+  <tr>
+    <td><a href="make_expression.md">make_expression</a></td>
+    <td>Returns a compiled JMESPath expression for later evaluation. (since 0.159.0)</td> 
   </tr>
 </table>
     
@@ -75,7 +79,7 @@ Output:
 #### jmespath_expression
 
 A [jsoncons::jmespath::jmespath_expression](jmespath_expression.md) 
-represents the compiled form of a JMESPath expression. It allows you to 
+represents the compiled form of a JMESPath string. It allows you to 
 evaluate a single compiled expression on multiple JSON documents.
 A `jmespath_expression` is immutable and thread-safe. 
 
@@ -111,7 +115,8 @@ int main()
         }        
     )";
 
-    auto expr = jmespath::jmespath_expression<json>::compile("people[?age > `20`].[name, age]");
+    auto expr = jmespath::make_expression<json>("people[?age > `20`].[name, age]"); // since 0.159.0
+    // auto expr = jmespath::jmespath_expression<json>::compile("people[?age > `20`].[name, age]"); // until 0.159.0
 
     json doc = json::parse(jtext);
 

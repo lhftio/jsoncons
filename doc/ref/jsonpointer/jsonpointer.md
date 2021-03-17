@@ -14,8 +14,8 @@ When applied to a JSON array, the character `-` indicates one past the last elem
 ### Classes
 <table border="0">
   <tr>
-    <td><a href="basic_json_ptr.md">basic_json_ptr</a></td>
-    <td>Objects of type <code>basic_json_ptr</code> represent a JSON Pointer.</td> 
+    <td><a href="basic_json_pointer.md">basic_json_pointer</a></td>
+    <td>Objects of type <code>basic_json_pointer</code> represent a JSON Pointer.</td> 
   </tr>
 </table>
 
@@ -35,7 +35,11 @@ When applied to a JSON array, the character `-` indicates one past the last elem
     <td>Inserts a value in a JSON document using JSON Pointer path notation, or if the path specifies an object member that already has the same key, assigns the new value to that member.</td> 
   </tr>
   <tr>
-    <td><a href="insert.md">insert</a></td>
+    <td><code>insert</code> (until 0.162.0)</td>
+    <td>Same as <a href="add_if_absent.md">add_if_absent</a></td>
+  </tr>
+  <tr>
+    <td><a href="add_if_absent.md">add_if_absent</a> (since 0.162.0))</td>
     <td>Inserts a value in a JSON document using JSON Pointer path notation, if the path doesn't specify an object member that already has the same key.</td> 
   </tr>
   <tr>
@@ -112,7 +116,7 @@ Output:
 (2) "Sayings of the Century"
 ```
 
-#### Using jsonpointer::json_ptr with jsonpointer::get 
+#### Using jsonpointer::json_pointer with jsonpointer::get 
 
 ```c++
 #include <jsoncons/json.hpp>
@@ -130,9 +134,12 @@ int main()
        }
     )");
 
-    jsonpointer::json_ptr ptr;
+    jsonpointer::json_pointer ptr; // (since 0.159.0)
+    // jsonpointer::json_ptr ptr; // (until 0.159.0)
+
     ptr /= "m~n";
-    ptr /= "1";
+    ptr /= 1; // (since 0.159.0)
+    //ptr /= "1"; // (until 0.159.0)
 
     std::cout << "(1) " << ptr << "\n\n";
 
@@ -156,5 +163,42 @@ m~n
 1
 
 (3) "qux"
+```
+
+#### Add a value to a location after creating objects when missing object keys (since 0.162.0)
+
+```c++
+#include <iostream>
+#include <jsoncons/json.hpp>
+#include <jsoncons_ext/jsonpointer/jsonpointer.hpp>
+
+using jsoncons::json;
+namespace jsonpointer = jsoncons::jsonpointer;
+
+int main()
+{
+    std::vector<std::string> keys = {"foo","bar","baz"};
+
+    jsonpointer::json_pointer location;
+    for (const auto& key : keys)
+    {
+        location /= key;
+    }
+
+    json doc;
+    jsonpointer::add(doc, location, "str", true);
+
+    std::cout << pretty_print(doc) << "\n\n";
+}
+```
+Output:
+```json
+{
+    "foo": {
+        "bar": {
+            "baz": "str"
+        }
+    }
+}
 ```
 

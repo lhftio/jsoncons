@@ -2,29 +2,61 @@
 
 ```c++
 #include <jsoncons_ext/jsonpath/json_query.hpp>
-
+```
+```c++
 template<class Json, class T>
-void json_replace(Json& root, 
-                  const typename Json::string_view_type& path, 
-                  T&& new_value)
+void json_replace(Json& root, const Json::string_view_type& expr, T&& new_value, 
+                  result_options options = result_options::nodups);                          (1)
+```
+```c++
+template<class Json, class UnaryCallback>
+void json_replace(Json& root, const Json::string_view_type& expr, UnaryCallback callback); (2) (until 0.161.0)
+```
+```c++
+template<class Json, class BinaryCallback>
+void json_replace(Json& root, const Json::string_view_type& expr, BinaryCallback callback, 
+                  result_options options = result_options::nodups);                          (3) (since 0.161.0)
 ```
 
-Searches for all values that match a JSONPath expression and replaces them with the specified value
+(1) Searches for all values that match the JSONPath expression `expr` and replaces them with the specified value
+
+(2) Searches for all values that match a JSONPath expression `expr` and replaces them with the result of the provided function.
+This overload has been deprecated in 0.161.0, use (3) instead.
+
+(3) Searches for all values that match a JSONPath expression `expr` and, for each result, 
+calls a callback provided by the user with a path and mutable reference to the value.
 
 #### Parameters
 
 <table>
   <tr>
-    <td>root</td>
+    <td><code>root</code></td>
     <td>JSON value</td> 
   </tr>
   <tr>
-    <td>path</td>
+    <td><code>expr</code></td>
     <td>JSONPath expression string</td> 
   </tr>
   <tr>
-    <td>new_value</td>
+    <td><code>new_value</code></td>
     <td>The value to use as replacement</td> 
+  </tr>
+  <tr>
+    <td><code>callback</code> (until 0.161.0)</td>
+    <td>A function object that accepts a const reference to a Json value
+    and returns a Json value. 
+It must have function call signature equivalent to
+<br/><br/><code>
+Json fun(const Json& val);
+</code><br/><br/>
+  </tr>
+  <tr>
+    <td><code>callback</code> (since 0.161.0)</td>
+    <td>A function object that accepts a path and a reference to a Json value. 
+It must have function call signature equivalent to
+<br/><br/><code>
+void fun(const Json::string_type& path, Json& val);
+</code><br/><br/>
   </tr>
 </table>
 
@@ -34,34 +66,43 @@ Throws a [jsonpath_error](jsonpath_error.md) if JSONPath evaluation fails.
 
 ### Examples
 
-#### Change the price of a book
-
-Input JSON file `booklist.json`:
+The examples use the sample data file `books.json`, 
 
 ```json
-{ "store": {
-    "book": [ 
-      { "category": "reference",
-        "author": "Nigel Rees",
-        "title": "Sayings of the Century",
-        "price": 8.95
-      },
-      { "category": "fiction",
-        "author": "Evelyn Waugh",
-        "title": "Sword of Honour",
-        "price": 12.99
-      },
-      { "category": "fiction",
-        "author": "Herman Melville",
-        "title": "Moby Dick",
-        "isbn": "0-553-21311-3",
-        "price": 8.99
-      }
+{
+    "books":
+    [
+        {
+            "category": "fiction",
+            "title" : "A Wild Sheep Chase",
+            "author" : "Haruki Murakami",
+            "price" : 22.72
+        },
+        {
+            "category": "fiction",
+            "title" : "The Night Watch",
+            "author" : "Sergei Lukyanenko",
+            "price" : 23.58
+        },
+        {
+            "category": "fiction",
+            "title" : "The Comedians",
+            "author" : "Graham Greene",
+            "price" : 21.99
+        },
+        {
+            "category": "memoir",
+            "title" : "The Night Watch",
+            "author" : "Phillips, David Atlee"
+        }
     ]
-  }
 }
 ```
+
+#### Change the price of A Wild Sheep Chase
+
 ```c++
+#include <fstream>
 #include <jsoncons/json.hpp>
 #include <jsoncons_ext/jsonpath/jsonpath.hpp>
 
@@ -70,42 +111,158 @@ using namespace jsoncons::jsonpath;
 
 int main()
 {
-    std::ifstream is("input/booklist.json");
-    json booklist;
-    is >> booklist;
+    std::ifstream is("./input/books.json");
+    json data = json::parse(is);
 
-    // Change the price of "Moby Dick"
-    json_replace(booklist,"$.store.book[?(@.isbn == '0-553-21311-3')].price",10.0);
-    std::cout << pretty_print(booklist) << std::endl;
-
+    jsonpath::json_replace(data,"$.books[?(@.title == 'A Wild Sheep Chase')].price",20.0);
+    std::cout << pretty_print(data) << "\n\n";
 }
 ```
 Output:
 ```json
 {
-    "store": {
-        "book": [
-            {
-                "author": "Nigel Rees",
-                "category": "reference",
-                "price": 8.95,
-                "title": "Sayings of the Century"
-            },
-            {
-                "author": "Evelyn Waugh",
-                "category": "fiction",
-                "price": 12.99,
-                "title": "Sword of Honour"
-            },
-            {
-                "author": "Herman Melville",
-                "category": "fiction",
-                "isbn": "0-553-21311-3",
-                "price": 10.0,
-                "title": "Moby Dick"
-            }
-        ]
-    }
+    "books": [
+        {
+            "author": "Haruki Murakami",
+            "category": "fiction",
+            "price": 20.0,
+            "title": "A Wild Sheep Chase"
+        },
+        {
+            "author": "Sergei Lukyanenko",
+            "category": "fiction",
+            "price": 23.58,
+            "title": "The Night Watch"
+        },
+        {
+            "author": "Graham Greene",
+            "category": "fiction",
+            "price": 21.99,
+            "title": "The Comedians"
+        },
+        {
+            "author": "Phillips, David Atlee",
+            "category": "memoir",
+            "title": "The Night Watch"
+        }
+    ]
+}
+```
+
+#### Make a discount on all books
+
+```c++
+#include <cmath>
+#include <fstream>
+#include <jsoncons/json.hpp>
+#include <jsoncons_ext/jsonpath/jsonpath.hpp>
+
+using namespace jsoncons;
+using namespace jsoncons::jsonpath;
+
+int main()
+{
+    std::ifstream is("./input/books.json");
+    json data = json::parse(is);
+
+    auto f = [](const std::string& /*path*/, json& price) 
+    {
+        price = std::round(price.as<double>() - 1.0);
+    };
+
+    // make a discount on all books
+    jsonpath::json_replace(data, "$.books[*].price", f);
+    std::cout << pretty_print(data);
+}
+```
+Output:
+```json
+{
+    "books": [
+        {
+            "author": "Haruki Murakami",
+            "category": "fiction",
+            "price": 22.0,
+            "title": "A Wild Sheep Chase"
+        },
+        {
+            "author": "Sergei Lukyanenko",
+            "category": "fiction",
+            "price": 23.0,
+            "title": "The Night Watch"
+        },
+        {
+            "author": "Graham Greene",
+            "category": "fiction",
+            "price": 21.0,
+            "title": "The Comedians"
+        },
+        {
+            "author": "Phillips, David Atlee",
+            "category": "memoir",
+            "title": "The Night Watch"
+        }
+    ]
+}
+```
+
+#### Add a missing price
+
+```c++
+#include <cmath>
+#include <fstream>
+#include <jsoncons/json.hpp>
+#include <jsoncons_ext/jsonpath/jsonpath.hpp>
+
+using namespace jsoncons;
+using namespace jsoncons::jsonpath;
+
+int main()
+{
+    std::ifstream is("./input/books.json");
+    json data = json::parse(is);
+
+    auto f = [](const std::string& /*path*/, json& book) 
+    {
+        if (book.at("category") == "memoir" && !book.contains("price"))
+        {
+            book.try_emplace("price",140.0);
+        }
+    };
+
+    jsonpath::json_replace(data, "$.books[*]", f);
+    std::cout << pretty_print(data);
+}
+```
+Output:
+```json
+{
+    "books": [
+        {
+            "author": "Haruki Murakami",
+            "category": "fiction",
+            "price": 22.72,
+            "title": "A Wild Sheep Chase"
+        },
+        {
+            "author": "Sergei Lukyanenko",
+            "category": "fiction",
+            "price": 23.58,
+            "title": "The Night Watch"
+        },
+        {
+            "author": "Graham Greene",
+            "category": "fiction",
+            "price": 21.99,
+            "title": "The Comedians"
+        },
+        {
+            "author": "Phillips, David Atlee",
+            "category": "memoir",
+            "price": 140.0,
+            "title": "The Night Watch"
+        }
+    ]
 }
 ```
 

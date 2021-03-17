@@ -1,3 +1,144 @@
+v0.162.2
+--------
+
+- Fixed a sign-compare warning 
+
+v0.162.1
+--------
+
+- Fixed a [gcc warning with -Wsign-compare](https://github.com/danielaparker/jsoncons/issues/307) 
+- `-Wsign-compare` enabled for gcc test builds
+- Fixed some PVS-Studio warnings
+
+v0.162.0
+--------
+
+Enhancements to jsonpointer
+
+- The jsonpointer functions `get`, `add`, `add_if_absent`, and `replace`
+have an additonal overload with a `create_if_missing` parameter. If
+passed `true`, creates key-object pairs when object keys are missing.
+
+Enhancements to jsonpath
+
+- Improved syntax checking for JSONPath unions
+- Simplified function signatures for `make_expression`, `json_query`, and `json_replace`.
+
+Changes:
+
+- The jsonpointer function `insert` has been deprecated and renamed to `add_if_absent`,
+for consistency with the other names.
+
+v0.161.0
+--------
+
+The `jsoncons::jsonpath` extension has been rewritten, see [JSONPath extension revisited](https://github.com/danielaparker/jsoncons/issues/306).
+
+Enhancements to JSONPath extension
+
+- Added a new function `make_expression` for creating a compiled JSONPath expression for later evaluation. 
+- The `json_query` and `json_replace` functions now take an optional `result_options` parameter that allows duplicate values (i.e. values with
+the same node paths) to be excluded from results, and for results to be sorted in path order.
+
+Changes to `json_query`
+
+- The parameter `result_type` has been replaced by a bitmask type `result_options`.
+For backwards compatability, `result_type` has been typedefed to `result_options`,
+and the `value` and `path` enumerators are still there. In addition, `result_options`
+provides options for excluding duplicates from results, and for results to be sorted in
+path order.
+
+- Until 0.161.0, `json_query` was limited to returning an array of results, a copy. 
+With 0.161, `json_query` allows the user to provide a binary callback 
+that is passed two arguments - the path of the item and a const reference to the 
+original item.
+
+- Until 0.161.0, `json_replace` allowed the user to provide a unary callback to replace 
+an item in the original JSON with a returned value. This overload is still there, but has
+been deprecated. With 0.161, `json_replace` allows the user to provide a binary callback 
+that is passed two arguments - the path of the item and a mutable reference to the 
+original item.
+
+Changes to supported JSONPath syntax
+
+- Previous versions allowed optionally omitting the '$' representing the root of the 
+JSON instance in path selectors. This is no longer allowed. In 0.161.0, all path 
+selectors must start with either '$', if relative to the root of the JSON instance, 
+or '@', if relative to the current node. E.g. `store.book.0` is not allowed, 
+rather, `$store.book.0`.
+- Previous versions supported union of completely separate paths, e.g. 
+`$..[name.first,address.city]`. 0.161.0 does too, but requires that the 
+relative paths `name.first` and `address.city` start with a '@', so the 
+example becomes `$..[@.name.first,@.address.city]` .
+- Previous versions supported unquoted names with the square bracket notation, 
+this is no longer allowed. E.g. `$[books]` is not allowed, rather `$['books']` 
+or `$["books"]`.
+- Previous versions allowed an empty string to be passed as a path argument 
+to `json_query`. This is no longer allowed, a syntax error will be raised.
+- In 0.161.0, unquoted names in the dot notation are restricted to digits `0-9`, 
+letters `A-Z` and `a-z`, the underscore character `_`, and unicode coded characters 
+that are non-ascii.  All others names must be enclosed with single or double quotes. 
+In particular, names with hypens (`-`) must be enclosed with single or double quotes. 
+
+Enhancements to JMESPath extension
+
+- Function arity errors are now raised during compilation of the JMESPath expression
+rather than during evaluation.
+
+v0.160.0
+--------
+
+Bugs fixed:
+
+- A C++20 change caused a `basic_json` overloaded operator '==' to be ambiguous 
+despite there being a unique best viable function. Fixed.
+
+- When parsing MessagePack buffers, lengths were being incorrectly 
+parsed as signed integers. Fixed.
+
+Enhancements:
+
+- Added jsonschema extension that implements the JSON Schema [Draft 7](https://json-schema.org/specification-links.html#draft-7) 
+specification for validating input JSON, [\#280](https://github.com/danielaparker/jsoncons/issues/280)
+
+Changes:
+
+- Until 0.160.0, `jsonpointer::flatten`, when applied to an
+an empty array or empty object, would produce a flattened value 
+of `null` rather than `[]` or `{}`. Since 0.160.0, it will
+produce `[]` or `{}`. For example, given `{"bar":{},"foo":[]}`,
+the flattened output was {"/bar":null,"/foo":null}, but is now 
+`{"/bar":{},"/foo":[]}`. `jsonpointer::unflatten` will now return 
+the original object.  
+
+Deprecated function removed:
+
+- The long deprecated `basic_json` function 
+`to_string(const basic_json_encode_options<char_type>&, char_allocator_type&) const`
+has been removed (replacement is `dump`).
+
+v0.159.0
+--------
+
+Bugs fixed:
+
+- Fixed clang 11 compile issues [\#284](https://github.com/danielaparker/jsoncons/issues/284)
+and  [\#285](https://github.com/danielaparker/jsoncons/issues/285).
+
+Changes:
+
+- In the jsonpointer extension, the type names `json_ptr` and `wjson_ptr` have been deprecated and
+renamed to `json_pointer` and `wjson_pointer`. 
+
+Enhancements:
+
+- The json_pointer operators `/=` and `/` now support integers.
+
+- New override for `jsonpath::json_replace` that searches for all values that match a JSONPath expression 
+and replaces them with the result of a given function, see [\#279](https://github.com/danielaparker/jsoncons/pull/279)
+
+- New factory function `jmespath::make_expression` to create compiled JMESPath expressions.
+
 v0.158.0 
 --------
 

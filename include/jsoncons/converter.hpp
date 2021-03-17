@@ -11,7 +11,7 @@
 #include <jsoncons/detail/more_type_traits.hpp>
 #include <jsoncons/byte_string.hpp>
 #include <jsoncons/json_type.hpp>
-#include <jsoncons/convert_error.hpp>
+#include <jsoncons/conv_error.hpp>
 #include <jsoncons/detail/write_number.hpp> // from_integer
 
 namespace jsoncons {
@@ -85,33 +85,32 @@ namespace jsoncons {
             {
                 case semantic_tag::base16:
                 {
-                    auto res = from_base16(s.begin(), s.end(), bytes);
-                    if (res.ec != from_base16_errc::success)
+                    auto res = decode_base16(s.begin(), s.end(), bytes);
+                    if (res.ec != conv_errc::success)
                     {
-                        ec = convert_errc::not_byte_string;
+                        ec = conv_errc::not_byte_string;
                     }
                     break;
                 }
                 case semantic_tag::base64:
                 {
-                    from_base64(s.begin(), s.end(), bytes);
+                    decode_base64(s.begin(), s.end(), bytes);
                     break;
                 }
                 case semantic_tag::base64url:
                 {
-                    from_base64url(s.begin(), s.end(), bytes);
+                    decode_base64url(s.begin(), s.end(), bytes);
                     break;
                 }
                 default:
                 {
-                    ec = convert_errc::not_byte_string;
+                    ec = conv_errc::not_byte_string;
                     break;
                 }
             }
         }
 
         template <class CharT>
-        JSONCONS_CPP14_CONSTEXPR 
         typename std::enable_if<detail::is_wide_character<CharT>::value>::type
         from_(Into& bytes, const jsoncons::basic_string_view<CharT>& s, semantic_tag tag, std::error_code& ec) const
         {
@@ -119,7 +118,7 @@ namespace jsoncons {
             auto retval = unicons::convert(s.begin(), s.end(), std::back_inserter(u));
             if (retval.ec != unicons::conv_errc())
             {
-                ec = convert_errc::not_utf8;
+                ec = conv_errc::not_utf8;
                 return;
             }
             from_(bytes, jsoncons::string_view(u), tag, ec);
@@ -157,7 +156,6 @@ namespace jsoncons {
             return s;
         }
 
-        JSONCONS_CPP14_CONSTEXPR 
         Into from(double val, semantic_tag, std::error_code&) const
         {
             Into s;
@@ -166,7 +164,6 @@ namespace jsoncons {
             return s;
         }
 
-        JSONCONS_CPP14_CONSTEXPR 
         Into from(double val, semantic_tag, const allocator_type& alloc, std::error_code&) const
         {
             Into s(alloc);
@@ -175,7 +172,6 @@ namespace jsoncons {
             return s;
         }
 
-        JSONCONS_CPP14_CONSTEXPR 
         Into from(half_arg_t, uint16_t val, semantic_tag, std::error_code&) const
         {
             Into s;
@@ -185,7 +181,6 @@ namespace jsoncons {
             return s;
         }
 
-        JSONCONS_CPP14_CONSTEXPR 
         Into from(half_arg_t, uint16_t val, semantic_tag, const allocator_type& alloc, std::error_code&) const
         {
             Into s(alloc);
@@ -268,19 +263,18 @@ namespace jsoncons {
             switch (tag)
             {
                 case semantic_tag::base64:
-                    to_base64(bytes.begin(), bytes.end(), s);
+                    encode_base64(bytes.begin(), bytes.end(), s);
                     break;
                 case semantic_tag::base16:
-                    to_base16(bytes.begin(), bytes.end(), s);
+                    encode_base16(bytes.begin(), bytes.end(), s);
                     break;
                 default:
-                    to_base64url(bytes.begin(), bytes.end(), s);
+                    encode_base64url(bytes.begin(), bytes.end(), s);
                     break;
             }
         }
 
         template <class ChT = char_type>
-        JSONCONS_CPP14_CONSTEXPR
         typename std::enable_if<!jsoncons::detail::is_byte<ChT>::value>::type
         from_(Into& s, const byte_string_view& bytes, semantic_tag tag, std::error_code& ec) const
         {
@@ -290,7 +284,7 @@ namespace jsoncons {
             auto retval = unicons::convert(u.begin(), u.end(), std::back_inserter(s));
             if (retval.ec != unicons::conv_errc())
             {
-                ec = convert_errc::not_wide_char;
+                ec = conv_errc::not_wide_char;
             }
         }
 

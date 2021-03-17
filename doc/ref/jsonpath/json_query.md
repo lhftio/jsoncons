@@ -4,48 +4,75 @@
 #include <jsoncons_ext/jsonpath/json_query.hpp>
 
 enum class result_type {value,path};
-
-template<Json>
-Json json_query(const Json& root, 
-                const typename Json::string_view_type& expr,
-                result_type result_t = result_type::value);
 ```
 
-Returns a `json` array of values or normalized path expressions selected from a root `json` structure.
+```c++
+template<class Json>
+Json json_query(const Json& root, 
+                const Json:string_view_type& expr,
+                result_type type = result_type::value);              (until 0.161.0)
+
+template<class Json>
+Json json_query(const Json& root, 
+                const Json::string_view_type& expr,
+                result_options options = result_options::value); (1) (since 0.161.0)
+```
+```c++
+template<class Json, class BinaryCallback>
+void json_query(const Json& root, 
+                const Json::string_view_type& expr,
+                BinaryCallback callback
+                result_options options = result_options::value); (2) (since 0.161.0)
+```
+(1) Evaluates the Json value `root` against the JSONPath expression `expr` and returns an array of values or 
+normalized path expressions. 
+
+(2) Evaluates the Json value `root` against the JSONPath expression `expr` and calls a provided
+callback repeatedly with the results. 
 
 #### Parameters
 
 <table>
   <tr>
-    <td>root</td>
+    <td><code>root</code></td>
     <td>Json value</td> 
   </tr>
   <tr>
-    <td>path</td>
-    <td>JSONPath expression</td> 
+    <td><code>expr</code></td>
+    <td>JSONPath expression string</td> 
   </tr>
   <tr>
-    <td>result_t</td>
-    <td>Indicates whether results are matching values (the default) or normalized path expressions</td> 
+    <td><code>callback</code></td>
+    <td>A function object that accepts a path and a reference to a Json value. 
+It must have function call signature equivalent to
+<br/><br/><code>
+void fun(const Json::string_type& path, const Json& val);
+</code><br/><br/>
+  </tr>
+  <tr>
+    <td><code>type</code> (until 0.161.0))</td>
+    <td>Since 0.161.0, typedefed to <code>jsonpath_options</code>.</td> 
+  </tr>
+  <tr>
+    <td><code>options</code> (since 0.161.0)</td>
+    <td>Result options, a bitmask of type <a href="result_options.md">result_options</></td> 
   </tr>
 </table>
 
 #### Return value
 
-Returns a `json` array containing either values or normalized path expressions matching the input path expression. 
-Returns an empty array if there is no match.
+(1) returns an array containing either values or normalized path expressions matching the JSONPath expression, 
+or an empty array if there is no match.
 
 #### Exceptions
 
-Throws a [jsonpath_error](jsonpath_error.md) if JSONPath evaluation fails.
+Throws a [jsonpath_error](jsonpath_error.md) if JSONPath parsing fails.
 
-#### Note
-Stefan Goessner's javascript implemention returns `false` in case of no match, but in a note he suggests an alternative is to return an empty array. The `jsoncons` implementation takes that alternative and returns an empty array in case of no match.
-####
+### Examples
 
-### Store examples
+#### Store examples
 
-The examples below use the JSON text from [Stefan Goessner's JSONPath](http://goessner.net/articles/JsonPath/) (booklist.json).
+The examples below use the sample data file `store.json`.
 
 ```json
 { "store": {
@@ -81,70 +108,69 @@ The examples below use the JSON text from [Stefan Goessner's JSONPath](http://go
 }
 ```
 
-#### Return values
-
 ```c++    
 #include <jsoncons/json.hpp>
 #include <jsoncons_ext/jsonpath/jsonpath.hpp>
 #include <fstream>
 
-using namespace jsoncons;
+using jsoncons::json;
+namespace jsonpath = jsoncons::jsonpath;
 
 int main()
 {
-    std::ifstream is("./input/booklist.json");
-    json booklist = json::parse(is);
+    std::ifstream is("./input/store.json");
+    json instance = json::parse(is);
 
     // The authors of books that are cheaper than $10
-    json result1 = jsonpath::json_query(booklist, "$.store.book[?(@.price < 10)].author");
+    json result1 = jsonpath::json_query(instance, "$.store.book[?(@.price < 10)].author");
     std::cout << "(1) " << result1 << "\n";
 
     // The number of books
-    json result2 = jsonpath::json_query(booklist, "$..book.length");
+    json result2 = jsonpath::json_query(instance, "$..book.length");
     std::cout << "(2) " << result2 << "\n";
 
     // The third book
-    json result3 = jsonpath::json_query(booklist, "$..book[2]");
+    json result3 = jsonpath::json_query(instance, "$..book[2]");
     std::cout << "(3)\n" << pretty_print(result3) << "\n";
 
     // All books whose author's name starts with Evelyn
-    json result4 = jsonpath::json_query(booklist, "$.store.book[?(@.author =~ /Evelyn.*?/)]");
+    json result4 = jsonpath::json_query(instance, "$.store.book[?(@.author =~ /Evelyn.*?/)]");
     std::cout << "(4)\n" << pretty_print(result4) << "\n";
 
     // The titles of all books that have isbn number
-    json result5 = jsonpath::json_query(booklist, "$..book[?(@.isbn)].title");
+    json result5 = jsonpath::json_query(instance, "$..book[?(@.isbn)].title");
     std::cout << "(5) " << result5 << "\n";
 
     // All authors and titles of books
-    json result6 = jsonpath::json_query(booklist, "$['store']['book']..['author','title']");
+    json result6 = jsonpath::json_query(instance, "$['store']['book']..['author','title']");
     std::cout << "(6)\n" << pretty_print(result6) << "\n";
 
     // Union of two ranges of book titles
-    json result7 = jsonpath::json_query(booklist, "$..book[1:2,2:4].title");
+    json result7 = jsonpath::json_query(instance, "$..book[1:2,2:4].title");
     std::cout << "(7)\n" << pretty_print(result7) << "\n";
 
     // Union of a subset of book titles identified by index
-    json result8 = jsonpath::json_query(booklist, "$.store[book[0].title,book[1].title,book[3].title]");
+    json result8 = jsonpath::json_query(instance, "$.store[book[0].title,book[1].title,book[3].title]");
     std::cout << "(8)\n" << pretty_print(result8) << "\n";
 
     // Union of third book title and all book titles with price > 10
-    json result9 = jsonpath::json_query(booklist, "$.store[book[3].title,book[?(@.price > 10)].title]");
+    json result9 = jsonpath::json_query(instance, "$.store[book[3].title,book[?(@.price > 10)].title]");
     std::cout << "(9)\n" << pretty_print(result9) << "\n";
 
     // Intersection of book titles with category fiction and price < 15
-    json result10 = jsonpath::json_query(booklist, "$.store.book[?(@.category == 'fiction')][?(@.price < 15)].title");
+    json result10 = jsonpath::json_query(instance, "$.store.book[?(@.category == 'fiction')][?(@.price < 15)].title");
     std::cout << "(10)\n" << pretty_print(result10) << "\n";
 
     // Normalized path expressions
-    json result11 = jsonpath::json_query(booklist, "$.store.book[?(@.author =~ /Evelyn.*?/)]", jsonpath::result_type::path);
+    json result11 = jsonpath::json_query(instance, "$.store.book[?(@.author =~ /Evelyn.*?/)]", jsonpath::result_options::path);
     std::cout << "(11)\n" << pretty_print(result11) << "\n";
 
     // All titles whose author's second name is 'Waugh'
-    json result12 = jsonpath::json_query(booklist,"$.store.book[?(tokenize(@.author,'\\\\s+')[1] == 'Waugh')].title");
+    json result12 = jsonpath::json_query(instance,"$.store.book[?(tokenize(@.author,'\\\\s+')[1] == 'Waugh')].title");
     std::cout << "(12)\n" << result12 << "\n";
 
     // All keys in the second book
-    json result13 = jsonpath::json_query(booklist,"keys($.store.book[1])[*]");
+    json result13 = jsonpath::json_query(instance,"keys($.store.book[1])[*]");
     std::cout << "(13)\n" << result13 << "\n";
 }
 ```
@@ -219,138 +245,134 @@ Output:
 ["author","category","price","title"]
 ```
 
-#### Return normalized path expressions
-
-```c++
-using namespace jsoncons;
-
-int main()
-{
-    std::string path = "$.store.book[?(@.price < 10)].title";
-    json result = jsonpath::json_query(store,path,result_type::path);
-
-    std::cout << pretty_print(result) << std::endl;
-}
-```
-Output:
-```json
-[
-    "$['store']['book'][0]['title']",
-    "$['store']['book'][2]['title']"
-]
-```
-
-### More examples
+#### Result options
 
 ```c++
 #include <jsoncons/json.hpp>
 #include <jsoncons_ext/jsonpath/jsonpath.hpp>
 
-using namespace jsoncons;
+using jsoncons::json;
+namespace jsonpath = jsoncons::jsonpath;
 
 int main()
 {
-    const json j = json::parse(R"(
-    [
-      {
-        "root": {
-          "id" : 10,
-          "second": [
-            {
-                 "names": [
-                   2
-              ],
-              "complex": [
-                {
-                  "names": [
-                    1
-                  ],
-                  "panels": [
-                    {
-                      "result": [
-                        1
-                      ]
-                    },
-                    {
-                      "result": [
-                        1,
-                        2,
-                        3,
-                        4
-                      ]
-                    },
-                    {
-                      "result": [
-                        1
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      },
-      {
-        "root": {
-          "id" : 20,
-          "second": [
-            {
-              "names": [
-                2
-              ],
-              "complex": [
-                {
-                  "names": [
-                    1
-                  ],
-                  "panels": [
-                    {
-                      "result": [
-                        1
-                      ]
-                    },
-                    {
-                      "result": [
-                        3,
-                        4,
-                        5,
-                        6
-                      ]
-                    },
-                    {
-                      "result": [
-                        1
-                      ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      }
-    ]
-    )");
+    std::string s = "[1,2,3,4,5]";
+    json data = json::parse(s);
+    std::string path = "$[4,1,1]";
 
-    // Find all arrays of elements where result.length is 4
-    json result1 = jsonpath::json_query(j,"$..[?(@.result.length == 4)].result");
-    std::cout << "(1) " << result1 << std::endl;
+    auto result1 = jsonpath::json_query(data, path);
+    std::cout << "(1) " << result1 << "\n\n";
 
-    // Find array of elements that has id 10 and result.length is 4
-    json result2 = jsonpath::json_query(j,"$..[?(@.id == 10)]..[?(@.result.length == 4)].result");
-    std::cout << "(2) " << result2 << std::endl;
+    auto result2 = jsonpath::json_query(data, path, jsonpath::result_options::path);
+    std::cout << "(2) " << result2 << "\n\n";
 
-    // Find all arrays of elements where result.length is 4 and that have value 3 
-    json result3 = jsonpath::json_query(j,"$..[?(@.result.length == 4 && (@.result[0] == 3 || @.result[1] == 3 || @.result[2] == 3 || @.result[3] == 3))].result");
-    std::cout << "(3) " << result3 << std::endl;
+    auto result3 = jsonpath::json_query(data, path, 
+                                        jsonpath::result_options::value | 
+                                        jsonpath::result_options::sort);
+    std::cout << "(3) " << result3 << "\n\n";
+
+    auto result4 = jsonpath::json_query(data, path, 
+                                        jsonpath::result_options::sort);
+    std::cout << "(4) " << result4 << "\n\n";
+
+    auto result5 = jsonpath::json_query(data, path, 
+                                        jsonpath::result_options::value | 
+                                        jsonpath::result_options::nodups);
+    std::cout << "(5) " << result5 << "\n\n";
+
+    auto result6 = jsonpath::json_query(data, path, 
+                                        jsonpath::result_options::nodups);
+    std::cout << "(6) " << result6 << "\n\n";
+
+    auto result7 = jsonpath::json_query(data, path, 
+                                        jsonpath::result_options::value | 
+                                        jsonpath::result_options::nodups | 
+                                        jsonpath::result_options::sort);
+    std::cout << "(7) " << result7 << "\n\n";
+
+    auto result8 = jsonpath::json_query(data, path, 
+                                        jsonpath::result_options::nodups | 
+                                        jsonpath::result_options::sort);
+    std::cout << "(8) " << result8 << "\n\n";
 }
 ```
 Output:
+```json
+(1) [5,2,2]
 
-```
-(1) [[1,2,3,4],[3,4,5,6]]
-(2) [[1,2,3,4]]
-(3) [[1,2,3,4],[3,4,5,6]]
+(2) ["$[4]","$[1]","$[1]"]
+
+(3) [2,2,5]
+
+(4) ["$[1]","$[1]","$[4]"]
+
+(5) [5,2]
+
+(6) ["$[4]","$[1]"]
+
+(7) [2,5]
+
+(8) ["$[1]","$[4]"]
 ```
 
+#### Callback
+
+The examples use the sample data file `books.json`, 
+
+```json
+{
+    "books":
+    [
+        {
+            "category": "fiction",
+            "title" : "A Wild Sheep Chase",
+            "author" : "Haruki Murakami",
+            "price" : 22.72
+        },
+        {
+            "category": "fiction",
+            "title" : "The Night Watch",
+            "author" : "Sergei Lukyanenko",
+            "price" : 23.58
+        },
+        {
+            "category": "fiction",
+            "title" : "The Comedians",
+            "author" : "Graham Greene",
+            "price" : 21.99
+        },
+        {
+            "category": "memoir",
+            "title" : "The Night Watch",
+            "author" : "Phillips, David Atlee"
+        }
+    ]
+}
+```
+
+```c++
+#include <jsoncons/json.hpp>
+#include <jsoncons_ext/jsonpath/jsonpath.hpp>
+#include <fstream>
+
+using jsoncons::json;
+namespace jsonpath = jsoncons::jsonpath;
+
+int main()
+{
+    std::ifstream is("./input/books.json");
+    json data = json::parse(is);
+    std::string path = "$.books[?(@.price >= 22.0)]";
+
+    auto callback = [](const std::string& path, const json& val)
+    {
+        std::cout << path << ": " << val << "\n";
+    };
+    jsonpath::json_query(data, path, callback, jsonpath::result_options::path);
+}
+```
+Output:
+```
+$['books'][0]: {"author":"Haruki Murakami","category":"fiction","price":22.72,"title":"A Wild Sheep Chase"}
+$['books'][1]: {"author":"Sergei Lukyanenko","category":"fiction","price":23.58,"title":"The Night Watch"}
+```

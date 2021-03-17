@@ -3,6 +3,7 @@
 
 #include <string>
 #include <fstream>
+#include <cmath>
 #include <cassert>
 #include <jsoncons/json.hpp>
 #include <jsoncons_ext/jsonpath/jsonpath.hpp>
@@ -15,7 +16,7 @@ namespace {
 
     void json_query_examples() 
     {
-        std::ifstream is("./input/booklist.json");
+        std::ifstream is("./input/store.json");
         json booklist = json::parse(is);
 
         // The authors of books that are cheaper than $10
@@ -47,11 +48,11 @@ namespace {
         std::cout << "(7)\n" << pretty_print(result7) << "\n";
 
         // Union of a subset of book titles identified by index
-        json result8 = jsonpath::json_query(booklist, "$.store[book[0].title,book[1].title,book[3].title]");
+        json result8 = jsonpath::json_query(booklist, "$.store[@.book[0].title,@.book[1].title,@.book[3].title]");
         std::cout << "(8)\n" << pretty_print(result8) << "\n";
 
         // Union of third book title and all book titles with price > 10
-        json result9 = jsonpath::json_query(booklist, "$.store[book[3].title,book[?(@.price > 10)].title]");
+        json result9 = jsonpath::json_query(booklist, "$.store[@.book[3].title,@.book[?(@.price > 10)].title]");
         std::cout << "(9)\n" << pretty_print(result9) << "\n";
 
         // Intersection of book titles with category fiction and price < 15
@@ -59,7 +60,7 @@ namespace {
         std::cout << "(10)\n" << pretty_print(result10) << "\n";
 
         // Normalized path expressions
-        json result11 = jsonpath::json_query(booklist, "$.store.book[?(@.author =~ /Evelyn.*?/)]", jsonpath::result_type::path);
+        json result11 = jsonpath::json_query(booklist, "$.store.book[?(@.author =~ /Evelyn.*?/)]", jsonpath::result_options::path);
         std::cout << "(11)\n" << pretty_print(result11) << "\n";
 
         // All titles whose author's second name is 'Waugh'
@@ -67,17 +68,211 @@ namespace {
         std::cout << "(12)\n" << result12 << "\n";
 
         // All keys in the second book
-        json result13 = jsonpath::json_query(booklist,"keys($.store.book[1])[*]");
+        json result13 = jsonpath::json_query(booklist,"keys($.store.book[1])");
         std::cout << "(13)\n" << result13 << "\n";
+    }
+
+    void function_tokenize_example() 
+    {
+        std::string data = R"(
+{
+    "books":
+    [
+        {
+            "title" : "A Wild Sheep Chase",
+            "author" : "Haruki Murakami"
+        },
+        {
+            "title" : "Almost Transparent Blue",
+            "author" : "Ryu Murakami"
+        },
+        {
+            "title" : "The Quiet American",
+            "author" : "Graham Greene"
+        }
+    ]
+}
+        )";
+
+        json j = json::parse(data);
+
+        // All titles whose author's last name is 'Murakami'
+        std::string expr = R"($.books[?(tokenize(@.author,'\\s+')[-1] == 'Murakami')].title)";
+
+        json result = jsonpath::json_query(j, expr);
+        std::cout << pretty_print(result) << "\n\n";
+    }
+
+    void function_sum_example() 
+    {
+        std::string data = R"(
+{
+    "books":
+    [
+        {
+            "title" : "A Wild Sheep Chase",
+            "author" : "Haruki Murakami",
+            "price" : 22.72
+        },
+        {
+            "title" : "The Night Watch",
+            "author" : "Sergei Lukyanenko",
+            "price" : 23.58
+        },
+        {
+            "title" : "The Comedians",
+            "author" : "Graham Greene",
+            "price" : 21.99
+        },
+        {
+            "title" : "The Night Watch",
+            "author" : "Phillips, David Atlee"
+        }
+    ]
+}
+        )";
+
+        json j = json::parse(data);
+
+        // All titles whose price is greater than the average price
+        std::string expr = R"($.books[?(@.price > sum($.books[*].price)/length($.books[*].price))].title)";
+
+        json result = jsonpath::json_query(j, expr);
+        std::cout << result << "\n\n";
+    }
+
+    void function_avg_example() 
+    {
+        std::string data = R"(
+{
+    "books":
+    [
+        {
+            "title" : "A Wild Sheep Chase",
+            "author" : "Haruki Murakami",
+            "price" : 22.72
+        },
+        {
+            "title" : "The Night Watch",
+            "author" : "Sergei Lukyanenko",
+            "price" : 23.58
+        },
+        {
+            "title" : "The Comedians",
+            "author" : "Graham Greene",
+            "price" : 21.99
+        },
+        {
+            "title" : "The Night Watch",
+            "author" : "Phillips, David Atlee"
+        }
+    ]
+}
+        )";
+
+        json j = json::parse(data);
+
+        // All titles whose price is greater than the average price
+        std::string expr = R"($.books[?(@.price > avg($.books[*].price))].title)";
+
+        json result = jsonpath::json_query(j, expr);
+        std::cout << result << "\n\n";
+    }
+
+    void function_floor_example() 
+    {
+        std::string data = "[9.2750, 9.2850]";
+
+        json j = json::parse(data);
+
+        std::string expr = "floor($[0])";
+        json result1 = jsonpath::json_query(j, expr);
+        std::cout << result1 << "\n\n";
+    }
+
+    void function_keys_example() 
+    {
+        std::string data = R"(
+{
+    "books":
+    [
+        {
+            "title" : "A Wild Sheep Chase",
+            "author" : "Haruki Murakami",
+            "price" : 22.72
+        },
+        {
+            "title" : "The Night Watch",
+            "author" : "Sergei Lukyanenko",
+            "price" : 23.58
+        },
+        {
+            "title" : "The Comedians",
+            "author" : "Graham Greene",
+            "price" : 21.99
+        },
+        {
+            "title" : "The Night Watch",
+            "author" : "Phillips, David Atlee"
+        }
+    ]
+}
+        )";
+
+        json j = json::parse(data);
+
+        // All books that don't have a price
+        std::string expr = "$.books[?(!contains(keys(@),'price'))]";
+
+        json result = jsonpath::json_query(j, expr);
+        std::cout << result << "\n\n";
+    }
+
+    void function_length_example() 
+    {
+        std::string data = R"(
+{
+    "books":
+    [
+        {
+            "title" : "A Wild Sheep Chase",
+            "author" : "Haruki Murakami",
+            "price" : 22.72
+        },
+        {
+            "title" : "The Night Watch",
+            "author" : "Sergei Lukyanenko",
+            "price" : 23.58
+        },
+        {
+            "title" : "The Comedians",
+            "author" : "Graham Greene",
+            "price" : 21.99
+        },
+        {
+            "title" : "The Night Watch",
+            "author" : "Phillips, David Atlee"
+        }
+    ]
+}
+        )";
+
+        json j = json::parse(data);
+
+        json result1 = jsonpath::json_query(j, "length($.books[*])");
+        std::cout << "(1) " << result1 << "\n\n";
+
+        json result2 = jsonpath::json_query(j, "length($.books[*].price)");
+        std::cout << "(2) "  << result2 << "\n\n";
     }
 
     void json_replace_example1()
     { 
-        std::ifstream is("./input/booklist.json");
-        json booklist = json::parse(is);
+        std::ifstream is("./input/books.json");
+        json data = json::parse(is);
 
-        jsonpath::json_replace(booklist,"$.store.book[?(@.isbn == '0-553-21311-3')].price",10.0);
-        std::cout << pretty_print(booklist) << "\n";
+        jsonpath::json_replace(data,"$.books[?(@.title == 'A Wild Sheep Chase')].price",20.0);
+        std::cout << pretty_print(data) << "\n\n";
     }
 
     void json_replace_example2()
@@ -108,7 +303,39 @@ namespace {
 
         jsonpath::json_replace(j,"$..book[?(@.price==31.96)].price", 30.9);
 
-        std::cout << ("2\n") << pretty_print(j) << "\n";
+        std::cout << ("2\n") << pretty_print(j) << "\n\n";
+    }
+
+    void json_replace_example3()
+    {
+        std::ifstream is("./input/books.json");
+        json data = json::parse(is);
+
+        auto f = [](const std::string& /*path*/, json& price) 
+        {
+            price = std::round(price.as<double>() - 1.0);
+        };
+
+        // make a discount on all books
+        jsonpath::json_replace(data, "$.books[*].price", f);
+        std::cout << pretty_print(data) << "\n\n";
+    }
+
+    void json_replace_example4()
+    {
+        std::ifstream is("./input/books.json");
+        json data = json::parse(is);
+
+        auto f = [](const std::string& /*path*/, json& book) 
+        {
+            if (book.at("category") == "memoir" && !book.contains("price"))
+            {
+                book.try_emplace("price",140.0);
+            }
+        };
+
+        jsonpath::json_replace(data, "$.books[*]", f);
+        std::cout << pretty_print(data) << "\n\n";
     }
 
     void jsonpath_complex_examples()
@@ -233,7 +460,7 @@ namespace {
       ]
     }    )");
 
-        std::string path = "$..[firstName,address.city]";
+        std::string path = "$..[@.firstName,@.address.city]";
         json result = jsonpath::json_query(root,path);
 
         std::cout << result << "\n";
@@ -269,18 +496,208 @@ namespace {
         assert(original == input);
     }
 
+    void more_json_query_examples()
+    {
+        std::ifstream is("./input/books.json");
+        json data = json::parse(is);
+
+        auto result1 = jsonpath::json_query(data, "$.books[1,1,3].title");
+        std::cout << "(1)\n" << pretty_print(result1) << "\n\n";
+
+        auto result2 = jsonpath::json_query(data, "$.books[1,1,3].title",
+                                            jsonpath::result_options::path);
+        std::cout << "(2)\n" << pretty_print(result2) << "\n\n";
+
+        auto result3 = jsonpath::json_query(data, "$.books[1,1,3].title",
+                                            jsonpath::result_options::value | jsonpath::result_options::nodups);
+        std::cout << "(3)\n" << pretty_print(result3) << "\n\n";
+
+        auto result4 = jsonpath::json_query(data, "$.books[1,1,3].title",
+                                            jsonpath::result_options::path | jsonpath::result_options::nodups);
+        std::cout << "(4)\n" << pretty_print(result4) << "\n\n";
+    }
+
+    void make_expression_examples()
+    {
+        auto expr = jsonpath::make_expression<json>("$.books[1,1,3].title");
+
+        std::ifstream is("./input/books.json");
+        json data = json::parse(is);
+
+        json result1 = expr.evaluate(data);
+        std::cout << "(1) " << pretty_print(result1) << "\n\n";
+
+        json result2 = expr.evaluate(data, jsonpath::result_options::path);
+        std::cout << "(2) " << pretty_print(result2) << "\n\n";
+
+        json result3 = expr.evaluate(data, jsonpath::result_options::value | jsonpath::result_options::nodups);
+        std::cout << "(3) " << pretty_print(result3) << "\n\n";
+
+        json result4 = expr.evaluate(data, jsonpath::result_options::path | jsonpath::result_options::nodups);
+        std::cout << "(4) " << pretty_print(result4) << "\n\n";
+    }
+
+    void more_make_expression_example()
+    {
+        auto expr = jsonpath::make_expression<json>("$.books[?(@.price > avg($.books[*].price))].title");
+
+        std::ifstream is("./input/books.json");
+        json data = json::parse(is);
+
+        json result = expr.evaluate(data);
+        std::cout << pretty_print(result) << "\n\n";
+    }
+
+    void make_expression_with_callback_example()
+    {
+        auto expr = jsonpath::make_expression<json>("$.books[?(@.price >= 22.0)]");
+
+        std::ifstream is("./input/books.json");
+        json data = json::parse(is);
+
+        auto callback = [](const std::string& path, const json& val)
+        {
+            std::cout << path << ": " << val << "\n";
+        };
+        expr.evaluate(data, callback, jsonpath::result_options::path);
+    }
+
+    void json_query_with_callback_example()
+    {
+        std::ifstream is("./input/books.json");
+        json data = json::parse(is);
+        std::string path = "$.books[?(@.price >= 22.0)]";
+
+        auto callback = [](const std::string& path, const json& val)
+        {
+            std::cout << path << ": " << val << "\n";
+        };
+        jsonpath::json_query(data, path, callback, jsonpath::result_options::path);
+    }
+
+    void json_query_with_options_example()
+    {
+        std::string s = "[1,2,3,4,5]";
+        json data = json::parse(s);
+        std::string path = "$[4,1,1]";
+
+        auto result1 = jsonpath::json_query(data, path);
+        std::cout << "(1) " << result1 << "\n\n";
+
+        auto result2 = jsonpath::json_query(data, path, jsonpath::result_options::path);
+        std::cout << "(2) " << result2 << "\n\n";
+
+        auto result3 = jsonpath::json_query(data, path, 
+                                            jsonpath::result_options::value | 
+                                            jsonpath::result_options::sort);
+        std::cout << "(3) " << result3 << "\n\n";
+
+        auto result4 = jsonpath::json_query(data, path, 
+                                            jsonpath::result_options::sort);
+        std::cout << "(4) " << result4 << "\n\n";
+
+        auto result5 = jsonpath::json_query(data, path, 
+                                            jsonpath::result_options::value | 
+                                            jsonpath::result_options::nodups);
+        std::cout << "(5) " << result5 << "\n\n";
+
+        auto result6 = jsonpath::json_query(data, path, 
+                                            jsonpath::result_options::nodups);
+        std::cout << "(6) " << result6 << "\n\n";
+
+        auto result7 = jsonpath::json_query(data, path, 
+                                            jsonpath::result_options::value | 
+                                            jsonpath::result_options::nodups | 
+                                            jsonpath::result_options::sort);
+        std::cout << "(7) " << result7 << "\n\n";
+
+        auto result8 = jsonpath::json_query(data, path, 
+                                            jsonpath::result_options::nodups | 
+                                            jsonpath::result_options::sort);
+        std::cout << "(8) " << result8 << "\n\n";
+    }
+
+    void search_for_and_replace_a_value()
+    {
+        std::string data = R"(
+          { "books": [ 
+              { "author": "Nigel Rees",
+                "title": "Sayings of the Century",
+                "isbn": "0048080489",
+                "price": 8.95
+              },
+              { "author": "Evelyn Waugh",
+                "title": "Sword of Honour",
+                "isbn": "0141193557",
+                "price": 12.99
+              },
+              { "author": "Herman Melville",
+                "title": "Moby Dick",
+                "isbn": "0553213113",
+                "price": 8.99
+              }
+            ]
+          }
+        )";
+
+        json j = json::parse(data);
+
+        // Change the price of "Moby Dick" from $8.99 to $10
+        jsonpath::json_replace(j,"$.books[?(@.isbn == '0553213113')].price",10.0);
+
+        // Increase the price of "Sayings of the Century" by $1
+        auto f = [](const std::string& /*path*/, json& value) 
+        {
+            value = value.as<double>() + 1.0;
+        };
+        jsonpath::json_replace(j, "$.books[?(@.isbn == '0048080489')].price", f); // (since 0.161.0)
+
+        std::cout << pretty_print(j) << std::endl;
+    }
+
+    void union_example() 
+    {
+        std::ifstream is("./input/store.json");
+        json store = json::parse(is);
+
+        std::string path = "$.store.book[:-2:1,(@.length-2),?(@.author=='J. R. R. Tolkien')].title";
+        auto result1 = jsonpath::json_query(store, path);
+        std::cout << "(1) " << result1 << "\n\n";
+
+        auto result2 = jsonpath::json_query(store, path, jsonpath::result_options::path);
+        std::cout << "(2) " << result2 << "\n\n";
+    }
+
 } // namespace
 
 void jsonpath_examples()
 {
     std::cout << "\nJsonPath examples\n\n";
-    json_replace_example1();
-    json_replace_example2();
+
     jsonpath_complex_examples();
     jsonpath_union();
     json_query_examples();
     flatten_and_unflatten();
+    more_json_query_examples();
+    make_expression_examples();
+    more_make_expression_example();
+    json_query_with_options_example();
+    make_expression_with_callback_example();
+    json_query_with_callback_example();
+    json_replace_example2();
+    json_replace_example3();
+    json_replace_example1();
+    json_replace_example4();
 
+    function_tokenize_example();
+    function_sum_example();
+    function_avg_example();
+    function_length_example();
+    function_floor_example();
+    function_keys_example();
+    search_for_and_replace_a_value();
+
+    union_example();
     std::cout << "\n";
 }
 

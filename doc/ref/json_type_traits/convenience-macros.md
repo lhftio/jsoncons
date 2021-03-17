@@ -16,7 +16,9 @@ GETTER    | Accesses data members through getter functions
 SETTER    | Modifies data members through setter functions
 NAME      | Serialize with provided names (instead of C++ member names)
 
-Square brackets indicate optionality.
+The `_NAME_` macros are the most general. They allow optional
+parameters that affect data member mappings. Optionality is
+indicated by square brackets.
 
 ```c++
 #include <jsoncons/json_type_traits.hpp>
@@ -212,32 +214,100 @@ in the derived classes.
 
 #### Parameters
 
-`class_name` - the name of a class or struct  
-`num_mandatory` - the number of mandatory class data members or accessors  
-`enum_name` - the name of an enum type or enum class type  
-`num_template_params` - for a class template, the number of template parameters  
-`memberN` - the name of a class data member. Class data members are normally modifiable, but may be `const` or
-`propertyN` - the base name of a class getter or setter with prefix `get` or `set` stripped out. 
-Data members that are `const` or `static const` are one-way serialized.  
-`getterN` - the getter for a class data member  
-`setterN` - the setter for a class data member  
-`enumeratorN` - an enumerator  
-`serialized_nameN` - serialized name  
-`modeN` - indicates whether a data member is read-write (`JSONCONS_RDWR`) or read-only (`JSONCONS_RDONLY`).
-Read-only data members are serialized but not de-serialized (since 0.157.0)  
-`matchN` - a function object that takes a value of type `const T&` and returns `true` if the value matches an allowed value,
-`false` otherwise. If the function object `to` is also provided, type `T` must be the same as the  return type of `T`,
-otherwise it must be the same as the member type (since 0.157.0)  
-`intoN` - a function object that takes a value of type of `memberN` (or return type of `getterN`)
-and returns a value of type `T` that satisfies `json_type_traits` specialization. If type `T`
-differs from type of `memberN` (or return type of `getterN`), and `modeN` is `JSONCONS_RDWR`, `fromN` must also be provided.
-`intoN` can be a free function, a struct object with the operator() defined, or a variable containing a lambda expression,
+<table border="0">
+  <tr>
+    <td><code>class_name</code></td>
+    <td>The name of a class or struct.</td> 
+  </tr>
+  <tr>
+    <td><code>enum_name</code></td>
+    <td>The name of an enum type or enum class type.</td> 
+  </tr>
+  <tr>
+    <td><code>num_mandatory</code></td>
+    <td>The number of mandatory class data members or accessors.</td> 
+  </tr>
+  <tr>
+    <td><code>num_template_params</code></td>
+    <td>For a class template, the number of template parameters.</td> 
+  </tr>
+  <tr>
+    <td><code>memberN</code></td>
+    <td>The name of a class data member. Class data members are normally modifiable, but may be <code>const</code> or <code>static const</code>.
+        Data members that are <code>const</code> or <code>static const</code> are one-way serialized.</td> 
+  </tr>
+  <tr>
+    <td><code>propertyN</code></td>
+    <td>The base name of a class getter or setter, with any get or set prefix stripped out.</td> 
+  </tr>
+  <tr>
+    <td><code>getterN</code></td>
+    <td>The getter for a class data member.</td> 
+  </tr>
+  <tr>
+    <td><code>setterN</code></td>
+    <td>The setter for a class data member.</td> 
+  </tr>
+  <tr>
+    <td><code>enumeratorN</code></td>
+    <td>An enumerator.</td> 
+  </tr>
+  <tr>
+    <td><code>serialized_nameN</code></td>
+    <td>Serialized name.</td> 
+  </tr>
+  <tr>
+    <td><code>modeN</code></td>
+    <td>Indicates whether a data member is read-write (<code>JSONCONS_RDWR</code>) or read-only (<code>JSONCONS_RDONLY</code>).
+Read-only data members are serialized but not de-serialized. (since 0.157.0)</td> 
+  </tr>
+  <tr>
+    <td><code>matchN</code></td>
+    <td>A function object that checks if a type that has <code>json_type_traits</code> specialization
+can be converted into a user value. 
+It must have function call signature equivalent to
+<br/><br/><code>
+bool fun(const Type& a);
+</code><br/><br/>
+where <code>Type</code> matches the return type of function object <code>intoN</code>, if provided,
+and if not, the type of <code>memberN</code> (<code>_MEMBER_</code> traits) 
+or the return type of an accessor (<code>_GETTER_ traits</code>).
+It returns <code>true</code> if the argument provided matches an allowed value,
+<code>false</code> otherwise. (since 0.157.0)</td> 
+  </tr>
+  <tr>
+    <td><code>intoN</code></td>
+    <td>A function object that converts a user value into a type that has <code>json_type_traits</code> specialization. 
+It must have function call signature equivalent to
+<br/><br/><code>
+Ret fun(const Type& a);
+</code><br/><br/>
+where <code>Type</code> matches the type of <code>memberN</code> (<code>_MEMBER_</code> traits) or the return type of an accessor (<code>_GETTER_ traits</code>), and <code>Ret</code> is the parameter type of function object <code>fromN</code> (if provided)
+or <code>Type</code> (if not).
+It can be a free function, a struct object with <code>operator()</code> defined, or a variable containing a lambda expression,
 but because it is used in an unevaluated context, it cannot be a lambda expression (at least until C++20).
-(since 0.157.0)  
-`fromN` - a function object that takes a value of return type of `intoN`, and returns a value
- of type of `memberN` (or return type of `getterN`). Only used if `modeN` is `JSONCONS_RDWR`. (since 0.157.0)  
-`base_class_name` - the name of a base class  
-`derived_class_nameN` - a class that is derived from the base class, and that has a `json_type_traits<Json,derived_class_nameN>` specialization.  
+(since 0.157.0)</td> 
+  </tr>
+  <tr>
+    <td><code>fromN</code></td>
+    <td>A function object that gets a user value from a type that has <code>json_type_traits</code> specialization. 
+It must have function call signature equivalent to
+<br/><br/><code>
+Ret fun(const Type& a);
+</code><br/><br/>
+where <code>Type</code> is the return type of the function object <code>intoN</code>, 
+and <code>Ret</code> is the  is the type of <code>memberN</code> (<code>_MEMBER_</code> traits) or the return type of an accessor (<code>_GETTER_ traits</code>).
+Only used if <code>modeN</code> is <code>JSONCONS_RDWR</code>. (since 0.157.0)</td> 
+  </tr>
+  <tr>
+    <td><code>base_class_name</code></td>
+    <td>The name of a base class.</td> 
+  </tr>
+  <tr>
+    <td><code>derived_class_nameN</code></td>
+    <td>A class that is derived from the base class, and that has a <code>json_type_traits<Json,derived_class_nameN></code> specialization.</td> 
+  </tr>
+</table>
 
 These macro declarations must be placed at global scope, outside any namespace blocks, and `class_name`, 
 `base_class_name` and `derived_class_nameN` must be a fully namespace qualified names.
@@ -257,7 +327,7 @@ All of the `json_type_traits` specializations for type `T` generated by the conv
 [Type selection and std::variant](#A8)  
 [Decode to a std::variant based on a type marker (since 0.158.0)](#A9)  
 [Transform data member (since 0.157.0)](#A10)  
-[Tidy data member (since 0.157.0)](#A11)
+[Tidy data member (since 0.158.0)](#A11)
 
 <div id="A1"/> 
 
@@ -1450,6 +1520,22 @@ circle area: 3.1415927
     }
 ]
 ```
+
+Note the mapping to the "type" member, in particular, for the rectangle,
+
+```c++
+(height,"type",JSONCONS_RDONLY,
+ [](const std::string& type) noexcept{return type == "rectangle";},
+ ns::rectangle_marker),
+```
+
+There are two things to observe. First, the class member being mapped,
+here `height`, can be any member, we don't actually use it. Instead,  
+we use the function object `ns::rectangle_marker` to ouput the value
+"rectangle" with the key "type". Second, the function argument in
+this position cannot be a lambda expression (at least until C++20), 
+because jsoncons uses it in an unevaluated context, so it is
+provided as a variable containing a lambda expression instead.
 
 <div id="A10"/>
 

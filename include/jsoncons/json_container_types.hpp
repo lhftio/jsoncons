@@ -295,7 +295,6 @@ namespace jsoncons {
                             if (item.size() > 0) // non-empty object or array
                             {
                                 elements_.push_back(std::move(item));
-                                assert(item.size() == 0);
                             }
                         }
                         current.clear();                           
@@ -308,7 +307,6 @@ namespace jsoncons {
                             if (kv.value().size() > 0) // non-empty object or array
                             {
                                 elements_.push_back(std::move(kv.value()));
-                                assert(kv.value().size() == 0);
                             }
                         }
                         current.clear();                           
@@ -573,6 +571,19 @@ namespace jsoncons {
         {
         }
 
+        json_object& operator=(const json_object& val)
+        {
+            allocator_holder<allocator_type>::operator=(val.get_allocator());
+            members_ = val.members_;
+            return *this;
+        }
+
+        json_object& operator=(json_object&& val)
+        {
+            val.swap(*this);
+            return *this;
+        }
+
         json_object(const json_object& val, const allocator_type& alloc) 
             : allocator_holder<allocator_type>(alloc), 
               members_(val.members_,key_value_allocator_type(alloc))
@@ -634,6 +645,11 @@ namespace jsoncons {
         ~json_object() noexcept
         {
             destroy();
+        }
+
+        bool empty() const
+        {
+            return members_.empty();
         }
 
         void swap(json_object& val) noexcept
@@ -1201,13 +1217,10 @@ namespace jsoncons {
                     if (kv.value().size() > 0)
                     {
                         temp.emplace_back(std::move(kv.value()));
-                        assert(kv.value().size() == 0);
                     }
                 }
             }
         }
-
-        json_object& operator=(const json_object&) = delete;
     };
 
     // Preserve order
@@ -1367,9 +1380,28 @@ namespace jsoncons {
             destroy();
         }
 
+        json_object& operator=(json_object&& val)
+        {
+            val.swap(*this);
+            return *this;
+        }
+
+        json_object& operator=(const json_object& val)
+        {
+            allocator_holder<allocator_type>::operator=(val.get_allocator());
+            members_ = val.members_;
+            index_ = val.index_;
+            return *this;
+        }
+
         void swap(json_object& val) noexcept
         {
             members_.swap(val.members_);
+        }
+
+        bool empty() const
+        {
+            return members_.empty();
         }
 
         iterator begin()
@@ -1894,7 +1926,6 @@ namespace jsoncons {
                     if (kv.value().size() > 0)
                     {
                         temp.emplace_back(std::move(kv.value()));
-                        assert(kv.value().size() == 0);
                     }
                 }
             }
@@ -1981,8 +2012,6 @@ namespace jsoncons {
             std::stable_sort(index_.begin(),index_.end(),
                              [&](std::size_t a, std::size_t b) -> bool {return members_.at(a).key().compare(members_.at(b).key()) < 0;});
         }
-
-        json_object& operator=(const json_object&) = delete;
     };
 
 } // namespace jsoncons

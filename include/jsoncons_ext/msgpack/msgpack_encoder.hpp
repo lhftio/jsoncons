@@ -121,7 +121,7 @@ namespace msgpack {
                 ec = msgpack_errc::max_nesting_depth_exceeded;
                 return false;
             } 
-            stack_.push_back(stack_item(msgpack_container_type::object, length));
+            stack_.emplace_back(msgpack_container_type::object, length);
 
             if (length <= 15)
             {
@@ -180,7 +180,7 @@ namespace msgpack {
                 ec = msgpack_errc::max_nesting_depth_exceeded;
                 return false;
             } 
-            stack_.push_back(stack_item(msgpack_container_type::array, length));
+            stack_.emplace_back(msgpack_container_type::array, length);
             if (length <= 15)
             {
                 // fixarray
@@ -667,7 +667,7 @@ namespace msgpack {
                 }
                 default:
                 {
-                    if (val <= (std::numeric_limits<int8_t>::max)())
+                    if (val <= static_cast<uint64_t>((std::numeric_limits<int8_t>::max)()))
                     {
                         // positive fixnum stores 7-bit positive integer
                         sink_.push_back(static_cast<uint8_t>(val));

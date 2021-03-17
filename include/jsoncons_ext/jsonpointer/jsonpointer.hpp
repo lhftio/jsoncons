@@ -21,20 +21,20 @@
 
 namespace jsoncons { namespace jsonpointer {
 
-namespace detail {
+    namespace detail {
 
-enum class pointer_state 
-{
-    start,
-    escaped,
-    delim
-};
+    enum class pointer_state 
+    {
+        start,
+        escaped,
+        delim
+    };
 
-} // detail
+    } // namespace detail
 
-    // json_ptr_iterator
+    // json_pointer_iterator
     template <class InputIt>
-    class json_ptr_iterator
+    class json_pointer_iterator
     {
         using char_type = typename std::iterator_traits<InputIt>::value_type;
         using string_type = std::basic_string<char_type>;
@@ -45,7 +45,6 @@ enum class pointer_state
         base_iterator p_;
         base_iterator q_;
         jsonpointer::detail::pointer_state state_;
-        std::size_t line_;
         std::size_t column_;
         std::basic_string<char_type> buffer_;
     public:
@@ -55,28 +54,28 @@ enum class pointer_state
         using reference = const value_type&;
         using iterator_category = std::input_iterator_tag;
 
-        json_ptr_iterator(base_iterator first, base_iterator last)
-            : json_ptr_iterator(first, last, first)
+        json_pointer_iterator(base_iterator first, base_iterator last)
+            : json_pointer_iterator(first, last, first)
         {
             std::error_code ec;
             increment(ec);
         }
 
-        json_ptr_iterator(base_iterator first, base_iterator last, base_iterator current)
+        json_pointer_iterator(base_iterator first, base_iterator last, base_iterator current)
             : path_ptr_(first), end_input_(last), p_(current), q_(current), state_(jsonpointer::detail::pointer_state::start),
-              line_(0), column_(0)
+              column_(0)
         {
         }
 
-        json_ptr_iterator(const json_ptr_iterator&) = default;
+        json_pointer_iterator(const json_pointer_iterator&) = default;
 
-        json_ptr_iterator(json_ptr_iterator&&) = default;
+        json_pointer_iterator(json_pointer_iterator&&) = default;
 
-        json_ptr_iterator& operator=(const json_ptr_iterator&) = default;
+        json_pointer_iterator& operator=(const json_pointer_iterator&) = default;
 
-        json_ptr_iterator& operator=(json_ptr_iterator&&) = default;
+        json_pointer_iterator& operator=(json_pointer_iterator&&) = default;
 
-        json_ptr_iterator& operator++()
+        json_pointer_iterator& operator++()
         {
             std::error_code ec;
             increment(ec);
@@ -87,73 +86,74 @@ enum class pointer_state
             return *this;
         }
 
-        json_ptr_iterator& increment(std::error_code& ec)
+        json_pointer_iterator& increment(std::error_code& ec)
         {
             q_ = p_;
-            buffer_.clear();
-
-            bool done = false;
-            while (p_ != end_input_ && !done)
+            if (p_ != end_input_)
             {
-                switch (state_)
+                buffer_.clear();
+                bool done = false;
+                while (p_ != end_input_ && !done)
                 {
-                    case jsonpointer::detail::pointer_state::start: 
-                        switch (*p_)
-                        {
-                            case '/':
-                                state_ = jsonpointer::detail::pointer_state::delim;
-                                break;
-                            default:
-                                ec = jsonpointer_errc::expected_slash;
-                                done = true;
-                                break;
-                        };
-                        break;
-                    case jsonpointer::detail::pointer_state::delim: 
-                        switch (*p_)
-                        {
-                            case '/':
-                                state_ = jsonpointer::detail::pointer_state::delim;
-                                done = true;
-                                break;
-                            case '~':
-                                state_ = jsonpointer::detail::pointer_state::escaped;
-                                break;
-                            default:
-                                buffer_.push_back(*p_);
-                                break;
-                        };
-                        break;
-                    case jsonpointer::detail::pointer_state::escaped: 
-                        switch (*p_)
-                        {
-                            case '0':
-                                buffer_.push_back('~');
-                                state_ = jsonpointer::detail::pointer_state::delim;
-                                break;
-                            case '1':
-                                buffer_.push_back('/');
-                                state_ = jsonpointer::detail::pointer_state::delim;
-                                break;
-                            default:
-                                ec = jsonpointer_errc::expected_0_or_1;
-                                done = true;
-                                break;
-                        };
-                        break;
-                    default:
-                        JSONCONS_UNREACHABLE();
-                        break;
+                    switch (state_)
+                    {
+                        case jsonpointer::detail::pointer_state::start: 
+                            switch (*p_)
+                            {
+                                case '/':
+                                    state_ = jsonpointer::detail::pointer_state::delim;
+                                    break;
+                                default:
+                                    ec = jsonpointer_errc::expected_slash;
+                                    done = true;
+                                    break;
+                            };
+                            break;
+                        case jsonpointer::detail::pointer_state::delim: 
+                            switch (*p_)
+                            {
+                                case '/':
+                                    done = true;
+                                    break;
+                                case '~':
+                                    state_ = jsonpointer::detail::pointer_state::escaped;
+                                    break;
+                                default:
+                                    buffer_.push_back(*p_);
+                                    break;
+                            };
+                            break;
+                        case jsonpointer::detail::pointer_state::escaped: 
+                            switch (*p_)
+                            {
+                                case '0':
+                                    buffer_.push_back('~');
+                                    state_ = jsonpointer::detail::pointer_state::delim;
+                                    break;
+                                case '1':
+                                    buffer_.push_back('/');
+                                    state_ = jsonpointer::detail::pointer_state::delim;
+                                    break;
+                                default:
+                                    ec = jsonpointer_errc::expected_0_or_1;
+                                    done = true;
+                                    break;
+                            };
+                            break;
+                        default:
+                            JSONCONS_UNREACHABLE();
+                            break;
+                    }
+                    ++p_;
+                    ++column_;
                 }
-                ++p_;
-                ++column_;
             }
             return *this;
         }
 
-        json_ptr_iterator operator++(int) // postfix increment
+        json_pointer_iterator operator++(int) // postfix increment
         {
-            json_ptr_iterator temp(*this);
+            json_pointer_iterator temp(*this);
             ++(*this);
             return temp;
         }
@@ -163,11 +163,11 @@ enum class pointer_state
             return buffer_;
         }
 
-        friend bool operator==(const json_ptr_iterator& it1, const json_ptr_iterator& it2)
+        friend bool operator==(const json_pointer_iterator& it1, const json_pointer_iterator& it2)
         {
             return it1.q_ == it2.q_;
         }
-        friend bool operator!=(const json_ptr_iterator& it1, const json_ptr_iterator& it2)
+        friend bool operator!=(const json_pointer_iterator& it1, const json_pointer_iterator& it2)
         {
             return !(it1 == it2);
         }
@@ -199,10 +199,10 @@ enum class pointer_state
         return result;
     }
 
-    // basic_json_ptr
+    // basic_json_pointer
 
     template <class CharT>
-    class basic_json_ptr
+    class basic_json_pointer
     {
     public:
         std::basic_string<CharT> path_;
@@ -211,34 +211,34 @@ enum class pointer_state
         using char_type = CharT;
         using string_type = std::basic_string<char_type>;
         using string_view_type = jsoncons::basic_string_view<char_type>;
-        using const_iterator = json_ptr_iterator<typename string_type::const_iterator>;
+        using const_iterator = json_pointer_iterator<typename string_type::const_iterator>;
         using iterator = const_iterator;
 
         // Constructors
-        basic_json_ptr()
+        basic_json_pointer()
         {
         }
-        explicit basic_json_ptr(const string_type& s)
+        explicit basic_json_pointer(const string_type& s)
             : path_(s)
         {
         }
-        explicit basic_json_ptr(string_type&& s)
+        explicit basic_json_pointer(string_type&& s)
             : path_(std::move(s))
         {
         }
-        explicit basic_json_ptr(const CharT* s)
+        explicit basic_json_pointer(const CharT* s)
             : path_(s)
         {
         }
 
-        basic_json_ptr(const basic_json_ptr&) = default;
+        basic_json_pointer(const basic_json_pointer&) = default;
 
-        basic_json_ptr(basic_json_ptr&&) = default;
+        basic_json_pointer(basic_json_pointer&&) = default;
 
         // operator=
-        basic_json_ptr& operator=(const basic_json_ptr&) = default;
+        basic_json_pointer& operator=(const basic_json_pointer&) = default;
 
-        basic_json_ptr& operator=(basic_json_ptr&&) = default;
+        basic_json_pointer& operator=(basic_json_pointer&&) = default;
 
         // Modifiers
 
@@ -247,7 +247,7 @@ enum class pointer_state
             path_.clear();
         }
 
-        basic_json_ptr& operator/=(const string_type& s)
+        basic_json_pointer& operator/=(const string_type& s) 
         {
             path_.push_back('/');
             path_.append(escape_string(s));
@@ -255,7 +255,19 @@ enum class pointer_state
             return *this;
         }
 
-        basic_json_ptr& operator+=(const basic_json_ptr& p)
+        template <class IntegerType>
+        typename std::enable_if<jsoncons::detail::is_integer<IntegerType>::value, basic_json_pointer&>::type
+        operator/=(IntegerType val)
+        {
+            string_type s;
+            jsoncons::detail::from_integer(val, s);
+            path_.push_back('/');
+            path_.append(s);
+
+            return *this;
+        }
+
+        basic_json_pointer& operator+=(const basic_json_pointer& p)
         {
             path_.append(p.path_);
             return *this;
@@ -288,599 +300,629 @@ enum class pointer_state
         }
 
         // Non-member functions
-        friend basic_json_ptr<CharT> operator/(const basic_json_ptr<CharT>& lhs, const string_type& rhs)
+        friend basic_json_pointer<CharT> operator/(const basic_json_pointer<CharT>& lhs, const string_type& rhs)
         {
-            basic_json_ptr<CharT> p(lhs);
+            basic_json_pointer<CharT> p(lhs);
             p /= rhs;
             return p;
         }
 
-        friend basic_json_ptr<CharT> operator+( const basic_json_ptr<CharT>& lhs, const basic_json_ptr<CharT>& rhs )
+        friend basic_json_pointer<CharT> operator+( const basic_json_pointer<CharT>& lhs, const basic_json_pointer<CharT>& rhs )
         {
-            basic_json_ptr<CharT> p(lhs);
+            basic_json_pointer<CharT> p(lhs);
             p += rhs;
             return p;
         }
 
-        friend bool operator==( const basic_json_ptr& lhs, const basic_json_ptr& rhs )
+        friend bool operator==( const basic_json_pointer& lhs, const basic_json_pointer& rhs )
         {
             return lhs.path_ == rhs.path_;
         }
 
-        friend bool operator!=( const basic_json_ptr& lhs, const basic_json_ptr& rhs )
+        friend bool operator!=( const basic_json_pointer& lhs, const basic_json_pointer& rhs )
         {
             return lhs.path_ != rhs.path_;
         }
 
         friend std::basic_ostream<CharT>&
-        operator<<( std::basic_ostream<CharT>& os, const basic_json_ptr<CharT>& p )
+        operator<<( std::basic_ostream<CharT>& os, const basic_json_pointer<CharT>& p )
         {
             os << p.path_;
             return os;
         }
     };
 
-    using json_ptr = basic_json_ptr<char>;
-    using wjson_ptr = basic_json_ptr<wchar_t>;
+    template <class CharT,class IntegerType>
+    typename std::enable_if<jsoncons::detail::is_integer<IntegerType>::value, basic_json_pointer<CharT>>::type
+    operator/(const basic_json_pointer<CharT>& lhs, IntegerType rhs)
+    {
+        basic_json_pointer<CharT> p(lhs);
+        p /= rhs;
+        return p;
+    }
+
+    using json_pointer = basic_json_pointer<char>;
+    using wjson_pointer = basic_json_pointer<wchar_t>;
 
     #if !defined(JSONCONS_NO_DEPRECATED)
     template<class CharT>
-    using basic_address = basic_json_ptr<CharT>;
-    JSONCONS_DEPRECATED_MSG("Instead, use json_ptr") typedef json_ptr address;
+    using basic_address = basic_json_pointer<CharT>;
+    template<class CharT>
+    using basic_json_ptr = basic_json_pointer<CharT>;
+    JSONCONS_DEPRECATED_MSG("Instead, use json_pointer") typedef json_pointer address;
+    JSONCONS_DEPRECATED_MSG("Instead, use json_pointer") typedef json_pointer json_ptr;
+    JSONCONS_DEPRECATED_MSG("Instead, use wjson_pointer") typedef json_pointer wjson_ptr;
     #endif
 
     namespace detail {
 
-    template <class J,class JReference>
-    class handle_type
+    template <class Json>
+    const Json* resolve(const Json* current, const typename Json::string_view_type& buffer, std::error_code& ec)
     {
-    public:
-        using reference = JReference;
-        using type = reference;
-        using pointer = typename std::conditional<std::is_const<typename std::remove_reference<JReference>::type>::value,typename J::const_pointer,typename J::pointer>::type;
-
-        handle_type(reference ref) noexcept
-            : ptr_(std::addressof(ref))
+        if (current->is_array())
         {
+            if (buffer.size() == 1 && buffer[0] == '-')
+            {
+                ec = jsonpointer_errc::index_exceeds_array_size;
+                return current;
+            }
+            auto result = jsoncons::detail::to_integer_decimal<std::size_t>(buffer.data(), buffer.length());
+            if (!result)
+            {
+                ec = jsonpointer_errc::invalid_index;
+                return current;
+            }
+            std::size_t index = result.value();
+            if (index >= current->size())
+            {
+                ec = jsonpointer_errc::index_exceeds_array_size;
+                return current;
+            }
+            current = std::addressof(current->at(index));
         }
-
-        handle_type(const handle_type&) noexcept = default;
-
-        handle_type& operator=(const handle_type&) noexcept = default;
-
-        type get() const noexcept
+        else if (current->is_object())
         {
-            return *ptr_;
+            if (!current->contains(buffer))
+            {
+                ec = jsonpointer_errc::key_not_found;
+                return current;
+            }
+            current = std::addressof(current->at(buffer));
         }
-    private:
-        pointer ptr_;
-    };
-
-    template<class J,class JReference>
-    class jsonpointer_evaluator : public ser_context
-    {
-        using type = typename handle_type<J,JReference>::type;
-        using char_type = typename J::char_type;
-        using string_type = typename std::basic_string<char_type>;
-        using string_view_type = typename J::string_view_type;
-        using reference = JReference;
-        using pointer = typename std::conditional<std::is_const<typename std::remove_reference<JReference>::type>::value,typename J::const_pointer,typename J::pointer>::type;
-
-        std::size_t line_;
-        std::size_t column_;
-        string_type buffer_;
-        std::vector<handle_type<J,JReference>> current_;
-    public:
-        type get_result() 
+        else
         {
-            return current_.back().get();
+            ec = jsonpointer_errc::expected_object_or_array;
+            return current;
         }
-
-        void get(reference root, const string_view_type& path, std::error_code& ec)
-        {
-            evaluate(root, path, ec);
-            if (ec)
-            {
-                return;
-            }
-            if (path.empty())
-            {
-                return;
-            }
-            resolve(current_, buffer_, ec);
-        }
-
-        string_type normalized_path(reference root, const string_view_type& path)
-        {
-            std::error_code ec;
-            evaluate(root, path, ec);
-            if (ec)
-            {
-                return string_type(path);
-            }
-            if (current_.back().get().is_array() && buffer_.size() == 1 && buffer_[0] == '-')
-            {
-                string_type p = string_type(path.substr(0,path.length()-1));
-                std::string s = std::to_string(current_.back().get().size());
-                for (auto c : s)
-                {
-                    p.push_back(c);
-                }
-                return p;
-            }
-            else
-            {
-                return string_type(path);
-            }
-        }
-
-        void add(reference root, const string_view_type& path, const J& value, std::error_code& ec)
-        {
-            evaluate(root, path, ec);
-            if (ec)
-            {
-                return;
-            }
-            if (current_.back().get().is_array())
-            {
-                if (buffer_.size() == 1 && buffer_[0] == '-')
-                {
-                    current_.back().get().push_back(value);
-                }
-                else
-                {
-                    if (!jsoncons::detail::is_base10(buffer_.data(), buffer_.length()))
-                    {
-                        ec = jsonpointer_errc::invalid_index;
-                        return;
-                    }
-                    auto result = jsoncons::detail::to_integer<std::size_t>(buffer_.data(), buffer_.length());
-                    if (!result)
-                    {
-                        ec = jsonpointer_errc::invalid_index;
-                        return;
-                    }
-                    std::size_t index = result.value();
-                    if (index > current_.back().get().size())
-                    {
-                        ec = jsonpointer_errc::index_exceeds_array_size;
-                        return;
-                    }
-                    if (index == current_.back().get().size())
-                    {
-                        current_.back().get().push_back(value);
-                    }
-                    else
-                    {
-                        current_.back().get().insert(current_.back().get().array_range().begin()+index,value);
-                    }
-                }
-            }
-            else if (current_.back().get().is_object())
-            {
-                current_.back().get().insert_or_assign(buffer_,value);
-            }
-            else
-            {
-                ec = jsonpointer_errc::expected_object_or_array;
-                return;
-            }
-        }
-
-        void insert(reference root, const string_view_type& path, const J& value, std::error_code& ec)
-        {
-            evaluate(root, path, ec);
-            if (ec)
-            {
-                return;
-            }
-            if (current_.back().get().is_array())
-            {
-                if (buffer_.size() == 1 && buffer_[0] == '-')
-                {
-                    current_.back().get().push_back(value);
-                }
-                else
-                {
-                    if (!jsoncons::detail::is_base10(buffer_.data(), buffer_.length()))
-                    {
-                        ec = jsonpointer_errc::invalid_index;
-                        return;
-                    }
-                    auto result = jsoncons::detail::to_integer<std::size_t>(buffer_.data(), buffer_.length());
-                    if (!result)
-                    {
-                        ec = jsonpointer_errc::invalid_index;
-                        return;
-                    }
-                    std::size_t index = result.value();
-                    if (index > current_.back().get().size())
-                    {
-                        ec = jsonpointer_errc::index_exceeds_array_size;
-                        return;
-                    }
-                    if (index == current_.back().get().size())
-                    {
-                        current_.back().get().push_back(value);
-                    }
-                    else
-                    {
-                        current_.back().get().insert(current_.back().get().array_range().begin()+index,value);
-                    }
-                }
-            }
-            else if (current_.back().get().is_object())
-            {
-                if (current_.back().get().contains(buffer_))
-                {
-                    ec = jsonpointer_errc::key_already_exists;
-                    return;
-                }
-                else
-                {
-                    current_.back().get().insert_or_assign(buffer_,value);
-                }
-            }
-            else
-            {
-                ec = jsonpointer_errc::expected_object_or_array;
-                return;
-            }
-        }
-
-        void remove(reference root, const string_view_type& path, std::error_code& ec)
-        {
-            evaluate(root, path, ec);
-            if (ec)
-            {
-                return;
-            }
-            if (current_.back().get().is_array())
-            {
-                if (buffer_.size() == 1 && buffer_[0] == '-')
-                {
-                    ec = jsonpointer_errc::index_exceeds_array_size;
-                    return;
-                }
-                else
-                {
-                    if (!jsoncons::detail::is_base10(buffer_.data(), buffer_.length()))
-                    {
-                        ec = jsonpointer_errc::invalid_index;
-                        return;
-                    }
-                    auto result = jsoncons::detail::to_integer<std::size_t>(buffer_.data(), buffer_.length());
-                    if (!result)
-                    {
-                        ec = jsonpointer_errc::invalid_index;
-                        return;
-                    }
-                    std::size_t index = result.value();
-                    if (index >= current_.back().get().size())
-                    {
-                        ec = jsonpointer_errc::index_exceeds_array_size;
-                        return;
-                    }
-                    current_.back().get().erase(current_.back().get().array_range().begin()+index);
-                }
-            }
-            else if (current_.back().get().is_object())
-            {
-                if (!current_.back().get().contains(buffer_))
-                {
-                    ec = jsonpointer_errc::name_not_found;
-                    return;
-                }
-                else
-                {
-                    current_.back().get().erase(buffer_);
-                }
-            }
-            else
-            {
-                ec = jsonpointer_errc::expected_object_or_array;
-                return;
-            }
-        }
-
-        void replace(reference root, const string_view_type& path, const J& value, std::error_code& ec)
-        {
-            evaluate(root, path, ec);
-            if (ec)
-            {
-                return;
-            }
-            if (current_.back().get().is_array())
-            {
-                if (buffer_.size() == 1 && buffer_[0] == '-')
-                {
-                    ec = jsonpointer_errc::index_exceeds_array_size;
-                    return;
-                }
-                else
-                {
-                    if (!jsoncons::detail::is_base10(buffer_.data(), buffer_.length()))
-                    {
-                        ec = jsonpointer_errc::invalid_index;
-                        return;
-                    }
-                    auto result = jsoncons::detail::to_integer<std::size_t>(buffer_.data(), buffer_.length());
-                    if (!result)
-                    {
-                        ec = jsonpointer_errc::invalid_index;
-                        return;
-                    }
-                    std::size_t index = result.value();
-                    if (index >= current_.back().get().size())
-                    {
-                        ec = jsonpointer_errc::index_exceeds_array_size;
-                        return;
-                    }
-                    (current_.back().get())[index] = value;
-                }
-            }
-            else if (current_.back().get().is_object())
-            {
-                if (!current_.back().get().contains(buffer_))
-                {
-                    ec = jsonpointer_errc::key_already_exists;
-                    return;
-                }
-                else
-                {
-                    current_.back().get().insert_or_assign(buffer_,value);
-                }
-            }
-            else
-            {
-                ec = jsonpointer_errc::expected_object_or_array;
-                return;
-            }
-        }
-
-        void evaluate(reference root, const string_view_type& path, std::error_code& ec)
-        {
-            current_.push_back(root);
-
-            json_ptr_iterator<typename string_view_type::iterator> it(path.begin(), path.end());
-            json_ptr_iterator<typename string_view_type::iterator> end(path.begin(), path.end(), path.end());
-            while (it != end)
-            {
-                buffer_ = *it;
-                it.increment(ec);
-                if (ec)
-                    return;
-                if (it == end)
-                {
-                    return;
-                }
-                resolve(current_, buffer_, ec);
-                if (ec)
-                    return;
-            }
-        }
-
-        static void resolve(std::vector<handle_type<J,JReference>>& current,
-                            const string_view_type& buffer,
-                            std::error_code& ec)
-        {
-            if (current.back().get().is_array())
-            {
-                if (buffer.size() == 1 && buffer[0] == '-')
-                {
-                    ec = jsonpointer_errc::index_exceeds_array_size;
-                    return;
-                }
-                else
-                {
-                    if (!jsoncons::detail::is_base10(buffer.data(), buffer.length()))
-                    {
-                        ec = jsonpointer_errc::invalid_index;
-                        return;
-                    }
-                    auto result = jsoncons::detail::to_integer<std::size_t>(buffer.data(), buffer.length());
-                    if (!result)
-                    {
-                        ec = jsonpointer_errc::invalid_index;
-                        return;
-                    }
-                    std::size_t index = result.value();
-                    if (index >= current.back().get().size())
-                    {
-                        ec = jsonpointer_errc::index_exceeds_array_size;
-                        return;
-                    }
-                    current.push_back(current.back().get().at(index));
-                }
-            }
-            else if (current.back().get().is_object())
-            {
-                if (!current.back().get().contains(buffer))
-                {
-                    ec = jsonpointer_errc::name_not_found;
-                    return;
-                }
-                current.push_back(current.back().get().at(buffer));
-            }
-            else
-            {
-                ec = jsonpointer_errc::expected_object_or_array;
-                return;
-            }
-        }
-
-        // ser_context
-
-        std::size_t line() const override
-        {
-            return line_;
-        }
-
-        std::size_t column() const override
-        {
-            return column_;
-        }
-    };
-
+        return current;
     }
 
-    template<class J>
-    std::basic_string<typename J::char_type> normalized_path(const J& root, const typename J::string_view_type& path)
+    template <class Json>
+    Json* resolve(Json* current, const typename Json::string_view_type& buffer, bool create_if_missing, std::error_code& ec)
     {
-        jsoncons::jsonpointer::detail::jsonpointer_evaluator<J,const J&> evaluator;
-        return evaluator.normalized_path(root,path);
+        if (current->is_array())
+        {
+            if (buffer.size() == 1 && buffer[0] == '-')
+            {
+                ec = jsonpointer_errc::index_exceeds_array_size;
+                return current;
+            }
+            auto result = jsoncons::detail::to_integer_decimal<std::size_t>(buffer.data(), buffer.length());
+            if (!result)
+            {
+                ec = jsonpointer_errc::invalid_index;
+                return current;
+            }
+            std::size_t index = result.value();
+            if (index >= current->size())
+            {
+                ec = jsonpointer_errc::index_exceeds_array_size;
+                return current;
+            }
+            current = std::addressof(current->at(index));
+        }
+        else if (current->is_object())
+        {
+            if (!current->contains(buffer))
+            {
+                if (create_if_missing)
+                {
+                    auto r = current->try_emplace(buffer, Json());
+                    current = std::addressof(r.first->value());
+                }
+                else
+                {
+                    ec = jsonpointer_errc::key_not_found;
+                    return current;
+                }
+            }
+            else
+            {
+                current = std::addressof(current->at(buffer));
+            }
+        }
+        else
+        {
+            ec = jsonpointer_errc::expected_object_or_array;
+            return current;
+        }
+        return current;
     }
 
-    template<class J>
-    J& get(J& root, const typename J::string_view_type& path)
+    } // namespace detail
+
+    // get
+
+    template<class Json>
+    Json& get(Json& root, 
+              const typename Json::string_view_type& location, 
+              bool create_if_missing,
+              std::error_code& ec)
     {
-        jsoncons::jsonpointer::detail::jsonpointer_evaluator<J,J&> evaluator;
+        if (location.empty())
+        {
+            return root;
+        }
+
+        Json* current = std::addressof(root);
+        json_pointer_iterator<typename Json::string_view_type::iterator> it(location.begin(), location.end());
+        json_pointer_iterator<typename Json::string_view_type::iterator> end(location.begin(), location.end(), location.end());
+        while (it != end)
+        {
+            current = jsoncons::jsonpointer::detail::resolve(current, *it, create_if_missing, ec);
+            if (ec)
+                return *current;
+            it.increment(ec);
+            if (ec)
+                return *current;
+        }
+        return *current;
+    }
+
+    template<class Json>
+    const Json& get(const Json& root, const typename Json::string_view_type& location, std::error_code& ec)
+    {
+        if (location.empty())
+        {
+            return root;
+        }
+
+        const Json* current = std::addressof(root);
+        json_pointer_iterator<typename Json::string_view_type::iterator> it(location.begin(), location.end());
+        json_pointer_iterator<typename Json::string_view_type::iterator> end(location.begin(), location.end(), location.end());
+        while (it != end)
+        {
+            current = jsoncons::jsonpointer::detail::resolve(current, *it, ec);
+            if (ec)
+                return *current;
+            it.increment(ec);
+            if (ec)
+                return *current;
+        }
+        return *current;
+    }
+
+    template<class Json>
+    Json& get(Json& root, 
+              const typename Json::string_view_type& location, 
+              std::error_code& ec)
+    {
+        return get(root, location, false, ec);
+    }
+
+    template<class Json>
+    Json& get(Json& root, 
+              const typename Json::string_view_type& location,
+              bool create_if_missing = false)
+    {
         std::error_code ec;
-        evaluator.get(root, path, ec);
+        Json& j = get(root, location, create_if_missing, ec);
         if (ec)
         {
             JSONCONS_THROW(jsonpointer_error(ec));
         }
-        return evaluator.get_result();
+        return j;
     }
 
-    template<class J>
-    const J& get(const J& root, const typename J::string_view_type& path)
+    template<class Json>
+    const Json& get(const Json& root, const typename Json::string_view_type& location)
     {
-        jsoncons::jsonpointer::detail::jsonpointer_evaluator<J,const J&> evaluator;
-
         std::error_code ec;
-        evaluator.get(root, path, ec);
+        const Json& j = get(root, location, ec);
         if (ec)
         {
             JSONCONS_THROW(jsonpointer_error(ec));
         }
-        return evaluator.get_result();
+        return j;
     }
 
-    template<class J>
-    J& get(J& root, const typename J::string_view_type& path, std::error_code& ec)
-    {
-        jsoncons::jsonpointer::detail::jsonpointer_evaluator<J,J&> evaluator;
-        evaluator.get(root, path, ec);
-        return evaluator.get_result();
-    }
+    // contains
 
-    template<class J>
-    const J& get(const J& root, const typename J::string_view_type& path, std::error_code& ec)
+    template<class Json>
+    bool contains(const Json& root, const typename Json::string_view_type& location)
     {
-        jsoncons::jsonpointer::detail::jsonpointer_evaluator<J,const J&> evaluator;
-        evaluator.get(root, path, ec);
-        return evaluator.get_result();
-    }
-
-    template<class J>
-    bool contains(const J& root, const typename J::string_view_type& path)
-    {
-        jsoncons::jsonpointer::detail::jsonpointer_evaluator<J,const J&> evaluator;
         std::error_code ec;
-        evaluator.get(root, path, ec);
+        get(root, location, ec);
         return !ec ? true : false;
     }
 
-    template<class J>
-    void add(J& root, const typename J::string_view_type& path, const J& value)
-    {
-        jsoncons::jsonpointer::detail::jsonpointer_evaluator<J,J&> evaluator;
+    // add
 
+    template<class Json,class T>
+    void add(Json& root, 
+             const typename Json::string_view_type& location, 
+             T&& value, 
+             bool create_if_missing,
+             std::error_code& ec)
+    {
+        Json* current = std::addressof(root);
+
+        std::basic_string<typename Json::char_type> buffer;
+        json_pointer_iterator<typename Json::string_view_type::iterator> it(location.begin(), location.end());
+        json_pointer_iterator<typename Json::string_view_type::iterator> end(location.begin(), location.end(), location.end());
+        while (it != end)
+        {
+            buffer = *it;
+            it.increment(ec);
+            if (ec)
+                return;
+            if (it != end)
+            {
+                current = jsoncons::jsonpointer::detail::resolve(current, buffer, create_if_missing, ec);
+                if (ec)
+                    return;
+            }
+        }
+        if (current->is_array())
+        {
+            if (buffer.size() == 1 && buffer[0] == '-')
+            {
+                current->emplace_back(std::forward<T>(value));
+                current = std::addressof(current->at(current->size()-1));
+            }
+            else
+            {
+                auto result = jsoncons::detail::to_integer_decimal<std::size_t>(buffer.data(), buffer.length());
+                if (!result)
+                {
+                    ec = jsonpointer_errc::invalid_index;
+                    return;
+                }
+                std::size_t index = result.value();
+                if (index > current->size())
+                {
+                    ec = jsonpointer_errc::index_exceeds_array_size;
+                    return;
+                }
+                if (index == current->size())
+                {
+                    current->emplace_back(std::forward<T>(value));
+                    current = std::addressof(current->at(current->size()-1));
+                }
+                else
+                {
+                    auto it2 = current->insert(current->array_range().begin()+index,std::forward<T>(value));
+                    current = std::addressof(*it2);
+                }
+            }
+        }
+        else if (current->is_object())
+        {
+            auto r = current->insert_or_assign(buffer,std::forward<T>(value));
+            current = std::addressof(r.first->value());
+        }
+        else
+        {
+            ec = jsonpointer_errc::expected_object_or_array;
+            return;
+        }
+    }
+
+    template<class Json,class T>
+    void add(Json& root, 
+             const typename Json::string_view_type& location, 
+             T&& value, 
+             std::error_code& ec)
+    {
+        add(root, location, std::forward<T>(value), false, ec);
+    }
+
+    template<class Json,class T>
+    void add(Json& root, 
+             const typename Json::string_view_type& location, 
+             T&& value,
+             bool create_if_missing = false)
+    {
         std::error_code ec;
-        evaluator.add(root, path, value, ec);
+        add(root, location, std::forward<T>(value), create_if_missing, ec);
         if (ec)
         {
             JSONCONS_THROW(jsonpointer_error(ec));
         }
     }
 
-    template<class J>
-    void add(J& root, const typename J::string_view_type& path, const J& value, std::error_code& ec)
-    {
-        jsoncons::jsonpointer::detail::jsonpointer_evaluator<J,J&> evaluator;
+    // add_if_absent
 
-        evaluator.add(root, path, value, ec);
+    template<class Json, class T>
+    void add_if_absent(Json& root, 
+                const typename Json::string_view_type& location, 
+                T&& value, 
+                bool create_if_missing,
+                std::error_code& ec)
+    {
+        Json* current = std::addressof(root);
+
+        std::basic_string<typename Json::char_type> buffer;
+        json_pointer_iterator<typename Json::string_view_type::iterator> it(location.begin(), location.end());
+        json_pointer_iterator<typename Json::string_view_type::iterator> end(location.begin(), location.end(), location.end());
+
+        while (it != end)
+        {
+            buffer = *it;
+            it.increment(ec);
+            if (ec)
+                return;
+            if (it != end)
+            {
+                current = jsoncons::jsonpointer::detail::resolve(current, buffer, create_if_missing, ec);
+                if (ec)
+                    return;
+            }
+        }
+        if (current->is_array())
+        {
+            if (buffer.size() == 1 && buffer[0] == '-')
+            {
+                current->emplace_back(std::forward<T>(value));
+                current = std::addressof(current->at(current->size()-1));
+            }
+            else
+            {
+                auto result = jsoncons::detail::to_integer_decimal<std::size_t>(buffer.data(), buffer.length());
+                if (!result)
+                {
+                    ec = jsonpointer_errc::invalid_index;
+                    return;
+                }
+                std::size_t index = result.value();
+                if (index > current->size())
+                {
+                    ec = jsonpointer_errc::index_exceeds_array_size;
+                    return;
+                }
+                if (index == current->size())
+                {
+                    current->emplace_back(std::forward<T>(value));
+                    current = std::addressof(current->at(current->size()-1));
+                }
+                else
+                {
+                    auto it2 = current->insert(current->array_range().begin()+index,std::forward<T>(value));
+                    current = std::addressof(*it2);
+                }
+            }
+        }
+        else if (current->is_object())
+        {
+            if (current->contains(buffer))
+            {
+                ec = jsonpointer_errc::key_already_exists;
+                return;
+            }
+            else
+            {
+                auto r = current->try_emplace(buffer,std::forward<T>(value));
+                current = std::addressof(r.first->value());
+            }
+        }
+        else
+        {
+            ec = jsonpointer_errc::expected_object_or_array;
+            return;
+        }
     }
 
-#if !defined(JSONCONS_NO_DEPRECATED)
-
-    template<class J>
-    JSONCONS_DEPRECATED_MSG("Instead, use add(J&, const typename J::string_view_type&, const J&)")
-    void insert_or_assign(J& root, const typename J::string_view_type& path, const J& value)
+    template<class Json, class T>
+    void add_if_absent(Json& root, 
+                const typename Json::string_view_type& location, 
+                T&& value, 
+                std::error_code& ec)
     {
-        add(root, path, value);
+        add_if_absent(root, location, std::forward<T>(value), false, ec);
     }
 
-    template<class J>
-    JSONCONS_DEPRECATED_MSG("Instead, use add(J&, const typename J::string_view_type&, const J&, std::error_code&)")
-    void insert_or_assign(J& root, const typename J::string_view_type& path, const J& value, std::error_code& ec)
+    template<class Json, class T>
+    void add_if_absent(Json& root, 
+                const typename Json::string_view_type& location, 
+                T&& value,
+                bool create_if_missing = false)
     {
-        add(root, path, value, ec);
-    }
-#endif
-    template<class J>
-    void insert(J& root, const typename J::string_view_type& path, const J& value)
-    {
-        jsoncons::jsonpointer::detail::jsonpointer_evaluator<J,J&> evaluator;
-
         std::error_code ec;
-        evaluator.insert(root, path, value, ec);
+        add_if_absent(root, location, std::forward<T>(value), create_if_missing, ec);
         if (ec)
         {
             JSONCONS_THROW(jsonpointer_error(ec));
         }
     }
 
-    template<class J>
-    void insert(J& root, const typename J::string_view_type& path, const J& value, std::error_code& ec)
-    {
-        jsoncons::jsonpointer::detail::jsonpointer_evaluator<J,J&> evaluator;
+    // remove
 
-        evaluator.insert(root, path, value, ec);
+    template<class Json>
+    void remove(Json& root, const typename Json::string_view_type& location, std::error_code& ec)
+    {
+        Json* current = std::addressof(root);
+
+        std::basic_string<typename Json::char_type> buffer;
+        json_pointer_iterator<typename Json::string_view_type::iterator> it(location.begin(), location.end());
+        json_pointer_iterator<typename Json::string_view_type::iterator> end(location.begin(), location.end(), location.end());
+
+        while (it != end)
+        {
+            buffer = *it;
+            it.increment(ec);
+            if (ec)
+                return;
+            if (it != end)
+            {
+                current = jsoncons::jsonpointer::detail::resolve(current, buffer, false, ec);
+                if (ec)
+                    return;
+            }
+        }
+        if (current->is_array())
+        {
+            if (buffer.size() == 1 && buffer[0] == '-')
+            {
+                ec = jsonpointer_errc::index_exceeds_array_size;
+                return;
+            }
+            else
+            {
+                auto result = jsoncons::detail::to_integer_decimal<std::size_t>(buffer.data(), buffer.length());
+                if (!result)
+                {
+                    ec = jsonpointer_errc::invalid_index;
+                    return;
+                }
+                std::size_t index = result.value();
+                if (index >= current->size())
+                {
+                    ec = jsonpointer_errc::index_exceeds_array_size;
+                    return;
+                }
+                current->erase(current->array_range().begin()+index);
+            }
+        }
+        else if (current->is_object())
+        {
+            if (!current->contains(buffer))
+            {
+                ec = jsonpointer_errc::key_not_found;
+                return;
+            }
+            else
+            {
+                current->erase(buffer);
+            }
+        }
+        else
+        {
+            ec = jsonpointer_errc::expected_object_or_array;
+            return;
+        }
     }
 
-    template<class J>
-    void remove(J& root, const typename J::string_view_type& path)
+    template<class Json>
+    void remove(Json& root, const typename Json::string_view_type& location)
     {
-        jsoncons::jsonpointer::detail::jsonpointer_evaluator<J,J&> evaluator;
-
         std::error_code ec;
-        evaluator.remove(root, path, ec);
+        remove(root, location, ec);
         if (ec)
         {
             JSONCONS_THROW(jsonpointer_error(ec));
         }
     }
 
-    template<class J>
-    void remove(J& root, const typename J::string_view_type& path, std::error_code& ec)
-    {
-        jsoncons::jsonpointer::detail::jsonpointer_evaluator<J,J&> evaluator;
+    // replace
 
-        evaluator.remove(root, path, ec);
+    template<class Json, class T>
+    void replace(Json& root, 
+                 const typename Json::string_view_type& location, 
+                 T&& value, 
+                 bool create_if_missing,
+                 std::error_code& ec)
+    {
+        Json* current = std::addressof(root);
+
+        std::basic_string<typename Json::char_type> buffer;
+        json_pointer_iterator<typename Json::string_view_type::iterator> it(location.begin(), location.end());
+        json_pointer_iterator<typename Json::string_view_type::iterator> end(location.begin(), location.end(), location.end());
+
+        while (it != end)
+        {
+            buffer = *it;
+            it.increment(ec);
+            if (ec)
+                return;
+            if (it != end)
+            {
+                current = jsoncons::jsonpointer::detail::resolve(current, buffer, create_if_missing, ec);
+                if (ec)
+                    return;
+            }
+        }
+        if (current->is_array())
+        {
+            if (buffer.size() == 1 && buffer[0] == '-')
+            {
+                ec = jsonpointer_errc::index_exceeds_array_size;
+                return;
+            }
+            else
+            {
+                auto result = jsoncons::detail::to_integer_decimal<std::size_t>(buffer.data(), buffer.length());
+                if (!result)
+                {
+                    ec = jsonpointer_errc::invalid_index;
+                    return;
+                }
+                std::size_t index = result.value();
+                if (index >= current->size())
+                {
+                    ec = jsonpointer_errc::index_exceeds_array_size;
+                    return;
+                }
+                current->at(index) = std::forward<T>(value);
+            }
+        }
+        else if (current->is_object())
+        {
+            if (!current->contains(buffer))
+            {
+                if (create_if_missing)
+                {
+                    current->try_emplace(buffer,std::forward<T>(value));
+                }
+                else
+                {
+                    ec = jsonpointer_errc::key_not_found;
+                    return;
+                }
+            }
+            else
+            {
+                auto r = current->insert_or_assign(buffer,std::forward<T>(value));
+                current = std::addressof(r.first->value());
+            }
+        }
+        else
+        {
+            ec = jsonpointer_errc::expected_object_or_array;
+            return;
+        }
     }
 
-    template<class J>
-    void replace(J& root, const typename J::string_view_type& path, const J& value)
+    template<class Json, class T>
+    void replace(Json& root, 
+                 const typename Json::string_view_type& location, 
+                 T&& value, 
+                 std::error_code& ec)
     {
-        jsoncons::jsonpointer::detail::jsonpointer_evaluator<J,J&> evaluator;
+        replace(root, location, std::forward<T>(value), false, ec);
+    }
 
+    template<class Json, class T>
+    void replace(Json& root, 
+                 const typename Json::string_view_type& location, 
+                 T&& value, 
+                 bool create_if_missing = false)
+    {
         std::error_code ec;
-        evaluator.replace(root, path, value, ec);
+        replace(root, location, std::forward<T>(value), create_if_missing, ec);
         if (ec)
         {
             JSONCONS_THROW(jsonpointer_error(ec));
         }
-    }
-
-    template<class J>
-    void replace(J& root, const typename J::string_view_type& path, const J& value, std::error_code& ec)
-    {
-        jsoncons::jsonpointer::detail::jsonpointer_evaluator<J,J&> evaluator;
-
-        evaluator.replace(root, path, value, ec);
     }
 
     template <class String,class Result>
@@ -948,7 +990,9 @@ enum class pointer_state
                 if (parent_value.empty())
                 {
                     // Flatten empty array to null
-                    result.try_emplace(parent_key, null_type{});
+                    //result.try_emplace(parent_key, null_type{});
+                    //result[parent_key] = parent_value;
+                    result.try_emplace(parent_key, parent_value);
                 }
                 else
                 {
@@ -968,7 +1012,9 @@ enum class pointer_state
                 if (parent_value.empty())
                 {
                     // Flatten empty object to null
-                    result.try_emplace(parent_key, null_type{});
+                    //result.try_emplace(parent_key, null_type{});
+                    //result[parent_key] = parent_value;
+                    result.try_emplace(parent_key, parent_value);
                 }
                 else
                 {
@@ -986,7 +1032,8 @@ enum class pointer_state
             default:
             {
                 // add primitive parent_value with its reference string
-                result[parent_key] = parent_value;
+                //result[parent_key] = parent_value;
+                result.try_emplace(parent_key, parent_value);
                 break;
             }
         }
@@ -1013,7 +1060,7 @@ enum class pointer_state
     template<class Json>
     Json safe_unflatten (Json& value)
     {
-        if (!value.is_object())
+        if (!value.is_object() || value.empty())
         {
             return value;
         }
@@ -1021,7 +1068,7 @@ enum class pointer_state
         std::size_t index = 0;
         for (const auto& item : value.object_range())
         {
-            auto r = jsoncons::detail::to_integer<std::size_t>(item.key().data(),item.key().size());
+            auto r = jsoncons::detail::to_integer_decimal<std::size_t>(item.key().data(),item.key().size());
             if (!r || (index++ != r.value()))
             {
                 safe = false;
@@ -1069,12 +1116,12 @@ enum class pointer_state
         for (const auto& item: value.object_range())
         {
             Json* part = &result;
-            basic_json_ptr<char_type> ptr(item.key());
+            basic_json_pointer<char_type> ptr(item.key());
             std::size_t index = 0;
             for (auto it = ptr.begin(); it != ptr.end(); )
             {
                 auto s = *it;
-                auto r = jsoncons::detail::to_integer<size_t>(s.data(), s.size());
+                auto r = jsoncons::detail::to_integer_decimal<size_t>(s.data(), s.size());
                 if (r && (index++ == r.value()))
                 {
                     if (!part->is_array())
@@ -1136,7 +1183,7 @@ enum class pointer_state
         for (const auto& item: value.object_range())
         {
             Json* part = &result;
-            basic_json_ptr<char_type> ptr(item.key());
+            basic_json_pointer<char_type> ptr(item.key());
             for (auto it = ptr.begin(); it != ptr.end(); )
             {
                 auto s = *it;
@@ -1169,6 +1216,50 @@ enum class pointer_state
             return unflatten_to_object(value,options);
         }
     }
+
+#if !defined(JSONCONS_NO_DEPRECATED)
+
+    template<class Json>
+    JSONCONS_DEPRECATED_MSG("Instead, use add(Json&, const typename Json::string_view_type&, const Json&)")
+    void insert_or_assign(Json& root, const typename Json::string_view_type& location, const Json& value)
+    {
+        add(root, location, value);
+    }
+
+    template<class Json>
+    JSONCONS_DEPRECATED_MSG("Instead, use add(Json&, const typename Json::string_view_type&, const Json&, std::error_code&)")
+    void insert_or_assign(Json& root, const typename Json::string_view_type& location, const Json& value, std::error_code& ec)
+    {
+        add(root, location, value, ec);
+    }
+    template<class Json, class T>
+    void insert(Json& root, 
+                const typename Json::string_view_type& location, 
+                T&& value, 
+                bool create_if_missing,
+                std::error_code& ec)
+    {
+        add_if_absent(root,location,std::forward<T>(value),create_if_missing,ec);
+    }
+
+    template<class Json, class T>
+    void insert(Json& root, 
+                const typename Json::string_view_type& location, 
+                T&& value, 
+                std::error_code& ec)
+    {
+        add_if_absent(root, location, std::forward<T>(value), ec);
+    }
+
+    template<class Json, class T>
+    void insert(Json& root, 
+                const typename Json::string_view_type& location, 
+                T&& value,
+                bool create_if_missing = false)
+    {
+        add_if_absent(root, location, std::forward<T>(value), create_if_missing);
+    }
+#endif
 
 } // namespace jsonpointer
 } // namespace jsoncons

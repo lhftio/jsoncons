@@ -333,7 +333,7 @@ private:
                 buffered_line_[string_type(name)] = std::basic_string<CharT>();
                 if (stack_[0].count_ == 0 && options_.column_names().size() == 0)
                 {
-                    strings_buffer_.push_back(string_type(name));
+                    strings_buffer_.emplace_back(name);
                 }
                 break;
             }
@@ -341,7 +341,7 @@ private:
             {
                 if (strings_buffer_.empty())
                 {
-                    strings_buffer_.push_back(string_type(name));
+                    strings_buffer_.emplace_back(name);
                 }
                 else
                 {
@@ -482,19 +482,19 @@ private:
         {
             case byte_string_chars_format::base16:
             {
-                to_base16(b.begin(),b.end(),s);
+                encode_base16(b.begin(),b.end(),s);
                 visit_string(s, semantic_tag::none, context, ec);
                 break;
             }
             case byte_string_chars_format::base64:
             {
-                to_base64(b.begin(),b.end(),s);
+                encode_base64(b.begin(),b.end(),s);
                 visit_string(s, semantic_tag::none, context, ec);
                 break;
             }
             case byte_string_chars_format::base64url:
             {
-                to_base64url(b.begin(),b.end(),s);
+                encode_base64url(b.begin(),b.end(),s);
                 visit_string(s, semantic_tag::none, context, ec);
                 break;
             }
@@ -612,9 +612,9 @@ private:
     }
 
     bool visit_uint64(uint64_t val, 
-                         semantic_tag, 
-                         const ser_context&,
-                         std::error_code&) override
+                      semantic_tag, 
+                      const ser_context&,
+                      std::error_code&) override
     {
         JSONCONS_ASSERT(!stack_.empty());
         switch (stack_.back().item_kind_)

@@ -25,6 +25,9 @@ JSON-like data formats such as CBOR that have them.
 
 jsoncons is distributed under the [Boost Software License](http://www.boost.org/users/license.html). 
 
+jsoncons is free but welcomes support to sustain its development. If you find this library helpful, please consider making a [one time donation](https://paypal.me/jsoncons?locale.x=en_US)
+or becoming a [:heart: sponsor](https://github.com/sponsors/danielaparker). 
+
 ## Extensions
 
 - [bson](doc/ref/bson/bson.md) implements decode from and encode to the [Binary JSON](http://bsonspec.org/) data format.
@@ -35,6 +38,7 @@ jsoncons is distributed under the [Boost Software License](http://www.boost.org/
 - [jsonpatch](doc/ref/jsonpatch/jsonpatch.md) implements the IETF standard [JavaScript Object Notation (JSON) Patch](https://tools.ietf.org/html/rfc6902)
 - [jsonpath](doc/ref/jsonpath/jsonpath.md) implements [Stefan Goessner's JSONPath](http://goessner.net/articles/JsonPath/).  It also supports search and replace using JSONPath expressions.
 - [jsonpointer](doc/ref/jsonpointer/jsonpointer.md) implements the IETF standard [JavaScript Object Notation (JSON) Pointer](https://tools.ietf.org/html/rfc6901)
+- [jsonschema](doc/ref/jsonschema/jsonschema.md) implements the JSON Schema [Draft 7](https://json-schema.org/specification-links.html#draft-7) specification for validating input JSON. (since 0.160.0)
 - [msgpack](doc/ref/msgpack/msgpack.md) implements decode from and encode to the [MessagePack](http://msgpack.org/index.html) data format.
 - [ubjson](doc/ref/ubjson/ubjson.md) implements decode from and encode to the [Universal Binary JSON Specification](http://ubjson.org/) data format.
 
@@ -47,6 +51,8 @@ _"I’m using your library for an external interface to pass data, as well as usin
 _"Verified that, for my needs in JSON and CBOR, it is working perfectly"_
 
 _"the ability to have an xpath like facility is so useful"_
+
+_"I finally decided on jsoncons after evaluating quite a few json libraries out there."_
 
 _"the serialization lib of choice with its beautiful mappings and ease of use"_
 
@@ -92,10 +98,6 @@ If exceptions are disabled or if the compile time macro `JSONCONS_NO_EXCEPTIONS`
 [Working with JSON data](#E1)  
 
 [Working with CBOR data](#E2)  
-
-[Constructing json values](#E3)  
-
-[Playing around with CBOR, JSON, and CSV](#E4)  
 
 <div id="E1"/> 
 
@@ -221,8 +223,10 @@ namespace ns {
                        hiking_experience assertion,
                        const std::string& rated,
                        double rating,
-                       const std::optional<std::chrono::seconds>& generated = std::optional<std::chrono::seconds>(),
-                       const std::optional<std::chrono::seconds>& expires = std::optional<std::chrono::seconds>())
+                       const std::optional<std::chrono::seconds>& generated = 
+                           std::optional<std::chrono::seconds>(),
+                       const std::optional<std::chrono::seconds>& expires = 
+                           std::optional<std::chrono::seconds>())
             : rater_(rater), assertion_(assertion), rated_(rated), rating_(rating),
               generated_(generated), expires_(expires)
         {
@@ -704,232 +708,9 @@ string_value: 0x3p-1 (bigfloat)
 string_value: 1.23456789012345678901234567890 (bigdec)
 ```
 
-<div id="E3"/> 
-
-### Constructing json values
-
-```c++
-#include <iostream>
-#include <fstream>
-#include <jsoncons/json.hpp>
-
-// For convenience
-using jsoncons::json;
-
-int main()
-{
-    json color_spaces(json_array_arg);
-    color_spaces.push_back("sRGB");
-    color_spaces.push_back("AdobeRGB");
-    color_spaces.push_back("ProPhoto RGB");
-
-    json image_sizing; // empty object
-    image_sizing["Resize To Fit"] = true; // a boolean 
-    image_sizing["Resize Unit"] = "pixels"; // a string
-    image_sizing["Resize What"] = "long_edge"; // a string
-    image_sizing["Dimension 1"] = 9.84; // a double
-    
-    json export_settings;
-
-    // create "File Format Options" as an object and put "Color Spaces" in it
-    export_settings["File Format Options"]["Color Spaces"] = std::move(color_spaces); 
-
-    export_settings["Image Sizing"] = std::move(image_sizing);
-
-    // Pretty print
-    std::cout << pretty_print(export_settings) << "\n\n";
-}
-```
-Output:
-```json
-{
-    "File Format Options": {
-        "Color Spaces": ["sRGB","AdobeRGB","ProPhoto RGB"],
-        "Image Formats": ["JPEG","PSD","TIFF","DNG"]
-    },
-    "File Settings": {
-        "Color Space": "sRGB",
-        "Image Format": "JPEG",
-        "Limit File Size": true,
-        "Limit File Size To": 10000
-    },
-    "Image Sizing": {
-        "Dimension 1": 9.84,
-        "Resize To Fit": true,
-        "Resize Unit": "pixels",
-        "Resize What": "long_edge"
-    }
-}
-```
-
-<div id="E4"/> 
-
-### Playing around with CBOR, JSON, and CSV
-
-```c++
-#include <jsoncons/json.hpp>
-#include <jsoncons_ext/cbor/cbor.hpp>
-#include <jsoncons_ext/jsonpointer/jsonpointer.hpp>
-#include <jsoncons_ext/csv/csv.hpp>
-
-// For convenience
-using namespace jsoncons;    
-
-int main()
-{
-    // Construct some CBOR using the streaming API
-    std::vector<uint8_t> bytes_in;
-    cbor::cbor_bytes_encoder encoder(bytes_in);
-    encoder.begin_array(); // indefinite length outer array
-    encoder.begin_array(3); // a fixed length array
-    encoder.string_value("foo");
-    encoder.byte_string_value(std::vector<uint8_t>{'P','u','s','s'}); // no suggested conversion
-    encoder.string_value("-18446744073709551617", semantic_tag::bigint);
-    encoder.end_array();
-    encoder.end_array();
-    encoder.flush();
-
-    // Print bytes
-    std::cout << "(1)\n" << byte_string_view(bytes_in) << "\n\n";
-/*
-    9f -- Start indefinte length array
-      83 -- Array of length 3
-        63 -- String value of length 3
-          666f6f -- "foo" 
-        44 -- Byte string value of length 4
-          50757373 -- 'P''u''s''s'
-        c3 -- Tag 3 (negative bignum)
-          49 -- Byte string value of length 9
-            010000000000000000 -- Bytes content
-      ff -- "break" 
-*/
-    // Unpack bytes into a json variant value, and add some more elements
-    json j = cbor::decode_cbor<json>(bytes_in);
-
-    // Loop over the rows
-    std::cout << "(2)\n";
-    for (const json& row : j.array_range())
-    {
-        std::cout << row << "\n";
-    }
-    std::cout << "\n";
-
-    // Get bignum value at position 0/2 using jsonpointer 
-    json& v = jsonpointer::get(j, "/0/2");
-    std::cout << "(3) " << v.as<std::string>() << "\n\n";
-
-    // Print JSON representation with default options
-    std::cout << "(4)\n";
-    std::cout << pretty_print(j) << "\n\n";
-
-    // Print JSON representation with different options
-    json_options options;
-    options.byte_string_format(byte_string_chars_format::base64)
-           .bigint_format(bigint_chars_format::base64url);
-    std::cout << "(5)\n";
-    std::cout << pretty_print(j, options) << "\n\n";
-
-    // Add some more elements
-
-    json another_array(json_array_arg); 
-    another_array.emplace_back(byte_string_arg, std::vector<uint8_t>({'P','u','s','s'}),
-                               semantic_tag::base64); // suggested conversion to base64
-    another_array.emplace_back("273.15", semantic_tag::bigdec);
-    another_array.emplace(another_array.array_range().begin(),"bar"); // place at front
-
-    j.push_back(std::move(another_array));
-    std::cout << "(6)\n";
-    std::cout << pretty_print(j) << "\n\n";
-
-    // Get big decimal value at position /1/2 using jsonpointer
-    json& ref = jsonpointer::get(j, "/1/2");
-    std::cout << "(7) " << ref.as<std::string>() << "\n\n";
-
-    // If your compiler supports extended integer types
-    __int128 i = j[1][2].as<__int128>();
-
-    // Get byte string value at position /1/1 as a std::vector<uint8_t>
-    auto bstr = j[1][1].as<std::vector<uint8_t>>();
-    std::cout << "(8) " << byte_string_view(bstr) << "\n\n";
-
-    // Repack bytes
-    std::vector<uint8_t> bytes_out;
-    cbor::encode_cbor(j, bytes_out);
-
-    // Print the repacked bytes
-    std::cout << "(9)\n" << byte_string_view(bytes_out) << "\n\n";
-/*
-    82 -- Array of length 2
-      83 -- Array of length 3
-        63 -- String value of length 3
-          666f6f -- "foo" 
-        44 -- Byte string value of length 4
-          50757373 -- 'P''u''s''s'
-        c3 -- Tag 3 (negative bignum)
-        49 -- Byte string value of length 9
-          010000000000000000 -- Bytes content
-      83 -- Another array of length 3
-      63 -- String value of length 3
-        626172 -- "bar"
-      d6 - Expected conversion to base64
-      44 -- Byte string value of length 4
-        50757373 -- 'P''u''s''s'
-      c4 -- Tag 4 (decimal fraction)
-        82 -- Array of length 2
-          21 -- -2
-          19 6ab3 -- 27315
-*/
-    // Encode to CSV
-    csv::csv_options csv_options;
-    csv_options.column_names("Column 1,Column 2,Column 3");
-
-    std::cout << "(10)\n";
-    csv::encode_csv(j, std::cout, csv_options);    
-}
-
-```
-Output:
-```
-(1)
-9f,83,63,66,6f,6f,44,50,75,73,73,c3,49,01,00,00,00,00,00,00,00,00,ff
-
-(2)
-["foo","UHVzcw","-18446744073709551617"]
-
-(3) -18446744073709551617
-
-(4)
-[
-    ["foo", "UHVzcw", "-18446744073709551617"]
-]
-
-(5)
-[
-    ["foo", "UHVzcw==", "~AQAAAAAAAAAA"]
-]
-
-(6)
-[
-    ["foo", "UHVzcw", "-18446744073709551617"],
-    ["bar", "UHVzcw==", "273.15"]
-]
-
-(7) 273.15
-
-(8) 50,75,73,73
-
-(9)
-82,83,63,66,6f,6f,44,50,75,73,73,c3,49,01,00,00,00,00,00,00,00,00,83,63,62,61,72,d6,44,50,75,73,73,c4,82,21,19,6a,b3
-
-(10)
-Column 1,Column 2,Column 3
-foo,UHVzcw,-18446744073709551617
-bar,UHVzcw==,273.15
-```
-
 ## Supported compilers
 
-jsoncons requires a C++11 compiler. It is tested in continuous integration on [AppVeyor](https://ci.appveyor.com/project/danielaparker/jsoncons), [Travis](https://travis-ci.org/danielaparker/jsoncons), and [doozer](https://doozer.io/).
+jsoncons requires a compiler with C++11 support. It is tested in continuous integration on [Github Actions](https://github.com/danielaparker/jsoncons/actions), [AppVeyor](https://ci.appveyor.com/project/danielaparker/jsoncons), [Travis](https://travis-ci.org/danielaparker/jsoncons), and [doozer](https://doozer.io/).
 [UndefinedBehaviorSanitizer (UBSan)](http://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html) diagnostics are enabled for selected gcc and clang builds.
 Since v0.151.0, it is integrated with [Google OSS-fuzz](https://github.com/google/oss-fuzz), with coverage for all parsers and encoders.
 
@@ -942,7 +723,7 @@ Since v0.151.0, it is integrated with [Google OSS-fuzz](https://github.com/googl
 |                         | 4.8.5                     | x64         | CentOS 7.6        |`std::regex` isn't fully implemented in 4.8, so `jsoncons::jsonpath` regular expression filters aren't supported in 4.8 |
 |                         | 6.3.1 (Red Hat 6.3.1-1)   | x64         | Fedora release 24 |       |
 |                         | 4.9.2                     | i386        | Debian 8          |       |
-| clang                   | 4.0, 5.0, 6.0, 7, 8                | x64         | Ubuntu            |       |
+| clang                   | 4.0, 5.0, 6.0, 7, 8, 9, 10| x64         | Ubuntu            |       |
 | clang xcode             | 9.3, 9.4, 10, 10.1, 10.2, 11.2, 12 | x64         | OSX               |       |
 
 ## Building the test suite and examples with CMake
@@ -951,23 +732,24 @@ Since v0.151.0, it is integrated with [Google OSS-fuzz](https://github.com/googl
 ```
 sudo apt-get install cmake
 ```
-Once cmake is installed, you can build the tests:
-```
-mkdir build
-cd build
-cmake ../ -DBUILD_TESTS=ON
-cmake --build . --target test_jsoncons --config Release
-```
-Run from the jsoncons tests directory:
+Once cmake is installed, you can build and run the unit tests from the jsoncons directory,
 
 On Windows:
 ```
-..\build\tests\Release\test_jsoncons
+> mkdir build
+> cd build
+> cmake .. -DJSONCONS_BUILD_TESTS=On
+> cmake --build .
+> ctest -C Debug --output-on-failure
 ```
 
 On UNIX:
 ```
-../build/tests/Release/test_jsoncons
+$ mkdir build
+$ cd build
+$ cmake .. -DJSONCONS_BUILD_TESTS=On
+$ cmake --build .
+$ ctest --output-on-failure
 ```
 
 ## Acknowledgements

@@ -49,9 +49,8 @@
 ### Construct
 
 [Construct a json object](#C1)  
+[Insert a value into a location after creating objects when missing object keys](#C3)  
 [Construct a json array](#C2)  
-[Insert a new value in an array at a specific position](#C3)  
-[Merge two json objects](#C5)  
 [Construct a json byte string](#C6)  
 [Construct a multidimensional json array](#C7)  
 [Construct a json array that contains non-owning references to other json values (since 0.156.0)](#C8)
@@ -69,6 +68,12 @@
 
 [Iterate over a json array](#D1)  
 [Iterate over a json object](#D2)  
+
+### Modify
+
+[Insert a new value in an array at a specific position](#J1)  
+[Merge two json objects](#J2)  
+[Erase an object with a specified key from an array](#J3)  
 
 ### Flatten and unflatten
 
@@ -1417,7 +1422,7 @@ If all members of the JSON data must be present, use
 ```
 JSONCONS_ALL_MEMBER_TRAITS(ns::Person, name, surname, ssn, age)
 ```
-instead. This will cause an exception to be thrown with the message
+instead. This will cause a [jsoncons::conv_error](ref/conv_error.md) to be thrown with the message
 ```
 Key not found: 'ssn' 
 ```
@@ -1455,7 +1460,7 @@ namespace jsoncons {
     template<class Json>
     struct json_type_traits<Json, ns::book>
     {
-        using allocator_type = typename Json::allocator_type;
+        using allocator_type = Json::allocator_type;
 
         static bool is(const Json& j) noexcept
         {
@@ -2805,6 +2810,24 @@ circle area: 3.1415927
 ]
 ```
 
+Note the mapping to the "type" member, in particular, for the rectangle,
+
+```c++
+(height,"type",JSONCONS_RDONLY,
+ [](const std::string& type) noexcept{return type == "rectangle";},
+ ns::rectangle_marker),
+```
+
+There are two things to observe. First, the class member being mapped,
+here `height`, can be any member, we don't actually use it. Instead,  
+we use the function object `ns::rectangle_marker` to ouput the value
+"rectangle" with the key "type". Second, the function argument in
+this position cannot be a lambda expression (at least until C++20), 
+because jsoncons uses it in an unevaluated context, so it is
+provided as a variable containing a lambda expression instead.
+See [convenience macros](ref/json_type_traits/convenience-macros.md)
+for full details.   
+
 <div id="G13"/>
 
 #### Convert JSON numbers to/from boost multiprecision numbers
@@ -2897,6 +2920,62 @@ json file_settings( json_object_arg,{
 };
 ```
 
+<div id="C3"/>
+
+#### Insert a value into a location after creating objects when missing object keys
+
+Suppose you have
+
+```c++
+json j; // empty object
+
+std::vector<std::string> keys = {"foo","bar","baz"}; // vector of keys
+```
+and wish to construct:
+```json
+{"foo":{"bar":{"baz":"str"}}}
+```
+
+You can accomplish this in a loop as follows:
+
+```c++
+json* ptr = &j;
+
+for (const auto& item : keys)
+{
+    auto r = ptr->try_emplace(item, json());
+    ptr = std::addressof(r.first->value());
+}
+*ptr = "str";
+```
+
+Since 0.162.0, you can also accomplish this with [jsonpointer::add](https://github.com/danielaparker/jsoncons/blob/master/doc/ref/jsonpointer/add.md):
+
+```c++
+#include <iostream>
+#include <jsoncons/json.hpp>
+#include <jsoncons_ext/jsonpointer/jsonpointer.hpp>
+
+using jsoncons::json;
+namespace jsonpointer = jsoncons::jsonpointer;
+
+int main()
+{
+    std::vector<std::string> keys = {"foo","bar","baz"};
+
+    jsonpointer::json_pointer location;
+    for (const auto& key : keys)
+    {
+        location /= key;
+    }
+
+    json j;
+    jsonpointer::add(j, location, "str", true); // create_if_missing set to true
+
+    std::cout << pretty_print(j) << "\n\n";
+}
+```
+
 <div id="C2"/>
 
 #### Construct a json array
@@ -2911,64 +2990,6 @@ color_spaces.push_back("ProPhoto RGB");
 or use an array initializer-list,
 ```c++
 json image_formats(json_array_arg, {"JPEG","PSD","TIFF","DNG"});
-```
-
-<div id="C3"/>
-
-#### Insert a new value in an array at a specific position
-
-```c++
-json cities(json_array_arg); // an empty array
-cities.push_back("Toronto");  
-cities.push_back("Vancouver");
-// Insert "Montreal" at beginning of array
-cities.insert(cities.array_range().begin(),"Montreal");  
-
-std::cout << cities << std::endl;
-```
-Output:
-```
-["Montreal","Toronto","Vancouver"]
-```
-
-<div id="C5"/>
-
-#### Merge two json objects
-
-[json::merge](ref/json/merge.md) inserts another json object's key-value pairs into a json object,
-unless they already exist with an equivalent key.
-
-[json::merge_or_update](ref/json/merge_or_update.md) inserts another json object's key-value pairs 
-into a json object, or assigns them if they already exist.
-
-The `merge` and `merge_or_update` functions perform only a one-level-deep shallow merge,
-not a deep merge of nested objects.
-
-```c++
-json another = json::parse(R"(
-{
-    "a" : "2",
-    "c" : [4,5,6]
-}
-)");
-
-json j = json::parse(R"(
-{
-    "a" : "1",
-    "b" : [1,2,3]
-}
-)");
-
-j.merge(std::move(another));
-std::cout << pretty_print(j) << std::endl;
-```
-Output:
-```json
-{
-    "a": "1",
-    "b": [1,2,3],
-    "c": [4,5,6]
-}
 ```
 
 <div id="C6"/>
@@ -3015,11 +3036,11 @@ Construct a 3-dimensional 4 x 3 x 2 json array with all elements initialized to 
 ```c++
 json j = json::make_array<3>(4, 3, 2, 0.0);
 double val = 1.0;
-for (size_t i = 0; i < a.size(); ++i)
+for (std::size_t i = 0; i < a.size(); ++i)
 {
-    for (size_t j = 0; j < j[i].size(); ++j)
+    for (std::size_t j = 0; j < j[i].size(); ++j)
     {
-        for (size_t k = 0; k < j[i][j].size(); ++k)
+        for (std::size_t k = 0; k < j[i][j].size(); ++k)
         {
             j[i][j][k] = val;
             val += 1.0;
@@ -3133,39 +3154,6 @@ json type: object, storage kind: json const pointer
 
 json type: object, storage kind: object
 json type: object, storage kind: object
-```
-
-### Iterate
-
-<div id="D1"/>
-
-#### Iterate over a json array
-
-```c++
-json j(json_array_arg, {1,2,3,4});
-
-for (auto val : j.array_range())
-{
-    std::cout << val << std::endl;
-}
-```
-
-<div id="D2"/>
-
-#### Iterate over a json object
-
-```c++
-json j(json_object_arg, {
-    {"author", "Haruki Murakami"},
-    {"title", "Kafka on the Shore"},
-    {"price", 25.17}
-});
-
-for (const auto& member : j.object_range())
-{
-    std::cout << member.key() << "=" 
-              << member.value() << std::endl;
-}
 ```
 
 ### Access
@@ -3359,6 +3347,170 @@ Output:
 (4) Not a byte string
 ```
 
+### Iterate
+
+<div id="D1"/>
+
+#### Iterate over a json array
+
+```c++
+json j(json_array_arg, {1,2,3,4});
+
+for (auto val : j.array_range())
+{
+    std::cout << val << std::endl;
+}
+```
+
+<div id="D2"/>
+
+#### Iterate over a json object
+
+```c++
+json j(json_object_arg, {
+    {"author", "Haruki Murakami"},
+    {"title", "Kafka on the Shore"},
+    {"price", 25.17}
+});
+
+for (const auto& member : j.object_range())
+{
+    std::cout << member.key() << "=" 
+              << member.value() << std::endl;
+}
+```
+
+### Modify
+
+<div id="J1"/>
+
+#### Insert a new value in an array at a specific position
+
+```c++
+json cities(json_array_arg); // an empty array
+cities.push_back("Toronto");  
+cities.push_back("Vancouver");
+// Insert "Montreal" at beginning of array
+cities.insert(cities.array_range().begin(),"Montreal");  
+
+std::cout << cities << std::endl;
+```
+Output:
+```
+["Montreal","Toronto","Vancouver"]
+```
+
+<div id="J2"/>
+
+#### Merge two json objects
+
+[json::merge](ref/json/merge.md) inserts another json object's key-value pairs into a json object,
+unless they already exist with an equivalent key.
+
+[json::merge_or_update](ref/json/merge_or_update.md) inserts another json object's key-value pairs 
+into a json object, or assigns them if they already exist.
+
+The `merge` and `merge_or_update` functions perform only a one-level-deep shallow merge,
+not a deep merge of nested objects.
+
+```c++
+json another = json::parse(R"(
+{
+    "a" : "2",
+    "c" : [4,5,6]
+}
+)");
+
+json j = json::parse(R"(
+{
+    "a" : "1",
+    "b" : [1,2,3]
+}
+)");
+
+j.merge(std::move(another));
+std::cout << pretty_print(j) << std::endl;
+```
+Output:
+```json
+{
+    "a": "1",
+    "b": [1,2,3],
+    "c": [4,5,6]
+}
+```
+
+<div id="J3"/>
+
+#### Erase an object with a specified key from an array
+
+```c++
+int main()
+{
+    std::string input = R"(
+[
+    {
+        "address": "ashdod",
+        "email": "ron10@gmail.com",
+        "first name": "ron",
+        "id": "756746783",
+        "last name": "cohen",
+        "phone": "0526732996",
+        "salary": 3000,
+        "type": "manager"
+    },
+    {
+        "address": "ashdod",
+        "email": "nirlevy120@gmail.com",
+        "first name": "nir",
+        "id": "11884398",
+        "last name": "levy",
+        "phone": "0578198932",
+        "salary": 4500,
+        "type": "manager"
+    }
+]
+    )";
+
+    try
+    {
+        // Read from input 
+        json instance = json::parse(input);
+ 
+        // Locate the item to be erased
+        auto it = std::find_if(instance.array_range().begin(), instance.array_range().end(), 
+                               [](const json& item){return item.at("id") == "756746783";});
+ 
+        // If found, erase it
+        if (it != instance.array_range().end())
+        {
+            instance.erase(it);
+        }
+
+        std::cout << pretty_print(instance) << "\n\n";
+    }
+    catch (const std::exception& e)
+    {
+        std::cout << e.what() << std::endl;    
+    }
+}
+```
+Output:
+```json
+[
+    {
+        "address": "ashdod",
+        "email": "nirlevy120@gmail.com",
+        "first name": "nir",
+        "id": "11884398",
+        "last name": "levy",
+        "phone": "0578198932",
+        "salary": 4500,
+        "type": "manager"
+    }
+]
+```
+
 ### Search and Replace
  
 <div id="F1"/>
@@ -3414,65 +3566,71 @@ You can use [json_replace](ref/jsonpath/json_replace.md) in the `jsonpath` exten
 #include <jsoncons/json.hpp>
 #include <jsoncons_ext/jsonpath/jsonpath.hpp>
 
-using namespace jsoncons;
-
+// For brevity
+using jsoncons::json;
+namespace jsonpath = jsoncons::jsonpath;
+ 
 int main()
 {
-    json j = json::parse(R"(
-        { "store": {
-            "book": [ 
-              { "category": "reference",
-                "author": "Nigel Rees",
-                "title": "Sayings of the Century",
-                "price": 8.95
-              },
-              { "category": "fiction",
-                "author": "Evelyn Waugh",
-                "title": "Sword of Honour",
-                "price": 12.99
-              },
-              { "category": "fiction",
-                "author": "Herman Melville",
-                "title": "Moby Dick",
-                "isbn": "0-553-21311-3",
-                "price": 8.99
-              }
-            ]
+    std::string data = R"(
+      { "books": [ 
+          { "author": "Nigel Rees",
+            "title": "Sayings of the Century",
+            "isbn": "0048080489",
+            "price": 8.95
+          },
+          { "author": "Evelyn Waugh",
+            "title": "Sword of Honour",
+            "isbn": "0141193557",
+            "price": 12.99
+          },
+          { "author": "Herman Melville",
+            "title": "Moby Dick",
+            "isbn": "0553213113",
+            "price": 8.99
           }
-        }
-    )");
+        ]
+      }
+    )";
+
+    json j = json::parse(data);
 
     // Change the price of "Moby Dick" from $8.99 to $10
-    jsonpath::json_replace(j,"$.store.book[?(@.isbn == '0-553-21311-3')].price",10.0);
-    std::cout << pretty_print(booklist) << std::endl;
+    jsonpath::json_replace(j,"$.books[?(@.isbn == '0553213113')].price",10.0);
+
+    // Increase the price of "Sayings of the Century" by $1
+    auto f = [](const std::string& /*path*/, json& value) 
+    {
+        value = value.as<double>() + 1.0;
+    };
+    jsonpath::json_replace(j, "$.books[?(@.isbn == '0048080489')].price", f); // (since 0.161.0)
+
+    std::cout << pretty_print(j) << std::endl;
 }
 ```
 Output:
 ```json
 {
-    "store": {
-        "book": [
-            {
-                "author": "Nigel Rees",
-                "category": "reference",
-                "price": 8.95,
-                "title": "Sayings of the Century"
-            },
-            {
-                "author": "Evelyn Waugh",
-                "category": "fiction",
-                "price": 12.99,
-                "title": "Sword of Honour"
-            },
-            {
-                "author": "Herman Melville",
-                "category": "fiction",
-                "isbn": "0-553-21311-3",
-                "price": 10.0,
-                "title": "Moby Dick"
-            }
-        ]
-    }
+    "books": [
+        {
+            "author": "Nigel Rees",
+            "isbn": "0048080489",
+            "price": 9.95,
+            "title": "Sayings of the Century"
+        },
+        {
+            "author": "Evelyn Waugh",
+            "isbn": "0141193557",
+            "price": 12.99,
+            "title": "Sword of Honour"
+        },
+        {
+            "author": "Herman Melville",
+            "isbn": "0553213113",
+            "price": 10.0,
+            "title": "Moby Dick"
+        }
+    ]
 }
 ```
 

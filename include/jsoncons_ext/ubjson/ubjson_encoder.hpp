@@ -122,7 +122,7 @@ private:
             ec = ubjson_errc::max_nesting_depth_exceeded;
             return false;
         } 
-        stack_.push_back(stack_item(ubjson_container_type::indefinite_length_object));
+        stack_.emplace_back(ubjson_container_type::indefinite_length_object);
         sink_.push_back(jsoncons::ubjson::detail::ubjson_format::start_object_marker);
 
         return true;
@@ -135,7 +135,7 @@ private:
             ec = ubjson_errc::max_nesting_depth_exceeded;
             return false;
         } 
-        stack_.push_back(stack_item(ubjson_container_type::object, length));
+        stack_.emplace_back(ubjson_container_type::object, length);
         sink_.push_back(jsoncons::ubjson::detail::ubjson_format::start_object_marker);
         sink_.push_back(jsoncons::ubjson::detail::ubjson_format::count_marker);
         put_length(length);
@@ -177,7 +177,7 @@ private:
             ec = ubjson_errc::max_nesting_depth_exceeded;
             return false;
         } 
-        stack_.push_back(stack_item(ubjson_container_type::indefinite_length_array));
+        stack_.emplace_back(ubjson_container_type::indefinite_length_array);
         sink_.push_back(jsoncons::ubjson::detail::ubjson_format::start_array_marker);
 
         return true;
@@ -190,7 +190,7 @@ private:
             ec = ubjson_errc::max_nesting_depth_exceeded;
             return false;
         } 
-        stack_.push_back(stack_item(ubjson_container_type::array, length));
+        stack_.emplace_back(ubjson_container_type::array, length);
         sink_.push_back(jsoncons::ubjson::detail::ubjson_format::start_array_marker);
         sink_.push_back(jsoncons::ubjson::detail::ubjson_format::count_marker);
         put_length(length);
@@ -424,26 +424,26 @@ private:
     }
 
     bool visit_uint64(uint64_t val, 
-                         semantic_tag, 
-                         const ser_context&,
-                         std::error_code&) override
+                      semantic_tag, 
+                      const ser_context&,
+                      std::error_code&) override
     {
         if (val <= (std::numeric_limits<uint8_t>::max)())
         {
             sink_.push_back(jsoncons::ubjson::detail::ubjson_format::uint8_type);
             jsoncons::detail::native_to_big(static_cast<uint8_t>(val),std::back_inserter(sink_));
         }
-        else if (val <= (std::numeric_limits<int16_t>::max)())
+        else if (val <= static_cast<uint64_t>((std::numeric_limits<int16_t>::max)()))
         {
             sink_.push_back(jsoncons::ubjson::detail::ubjson_format::int16_type);
             jsoncons::detail::native_to_big(static_cast<int16_t>(val),std::back_inserter(sink_));
         }
-        else if (val <= (std::numeric_limits<int32_t>::max)())
+        else if (val <= static_cast<uint64_t>((std::numeric_limits<int32_t>::max)()))
         {
             sink_.push_back(jsoncons::ubjson::detail::ubjson_format::int32_type);
             jsoncons::detail::native_to_big(static_cast<int32_t>(val),std::back_inserter(sink_));
         }
-        else if (val <= (uint64_t)(std::numeric_limits<int64_t>::max)())
+        else if (val <= static_cast<uint64_t>((std::numeric_limits<int64_t>::max)()))
         {
             sink_.push_back(jsoncons::ubjson::detail::ubjson_format::int64_type);
             jsoncons::detail::native_to_big(static_cast<int64_t>(val),std::back_inserter(sink_));

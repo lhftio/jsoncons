@@ -49,6 +49,8 @@ void json_traits_tuple_examples();
 void json_traits_bitset_examples();
 void json_traits_integer_examples();
 void json_traits_polymorphic_examples();
+void jsonschema_examples();
+void erase_examples();
 
 void comment_example()
 {
@@ -88,11 +90,10 @@ void first_example_a()
     }
     json books = json::parse(is);
 
-    for (std::size_t i = 0; i < books.size(); ++i)
+    for (const auto& book : books.at("books").array_range())
     {
         try
         {
-            json& book = books[i];
             std::string author = book["author"].as<std::string>();
             std::string title = book["title"].as<std::string>();
             double price = book["price"].as<double>();
@@ -116,11 +117,10 @@ void first_example_b()
     }
     json books = json::parse(is);
 
-    for (std::size_t i = 0; i < books.size(); ++i)
+    for (const auto& book : books.at("books").array_range())
     {
         try
         {
-            json& book = books[i];
             std::string author = book["author"].as<std::string>();
             std::string title = book["title"].as<std::string>();
             std::string price = book.get_value_or<std::string>("price", "N/A");
@@ -188,11 +188,10 @@ void first_example_d()
     //options.floatfield(std::ios::fixed);
     options.precision(2);
 
-    for (std::size_t i = 0; i < books.size(); ++i)
+    for (const auto& book : books.at("books").array_range())
     {
         try
         {
-            json& book = books[i];
             std::string author = book["author"].as<std::string>();
             std::string title = book["title"].as<std::string>();
             if (book.contains("price") && book["price"].is_number())
@@ -414,10 +413,6 @@ int main()
 
         jsonpatch_examples();
 
-        jsonpath_examples();
-
-        jsonpointer_examples();
-
         json_traits_macros_examples();
 
         run_cbor_typed_array_examples();
@@ -461,6 +456,14 @@ int main()
         json_traits_polymorphic_examples();
 
         json_traits_variant_examples();
+
+        erase_examples();
+
+        jsonschema_examples();
+
+        jsonpointer_examples();
+
+        jsonpath_examples();
     }
     catch (const std::exception& e)
     {

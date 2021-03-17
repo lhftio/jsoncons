@@ -444,34 +444,34 @@ namespace jsoncons {
         virtual void visit_flush() = 0;
 
         virtual bool visit_begin_object(semantic_tag tag, 
-                                     const ser_context& context, 
-                                     std::error_code& ec) = 0;
+                                        const ser_context& context, 
+                                        std::error_code& ec) = 0;
 
         virtual bool visit_begin_object(std::size_t /*length*/, 
-                                     semantic_tag tag, 
-                                     const ser_context& context, 
-                                     std::error_code& ec)
+                                        semantic_tag tag, 
+                                        const ser_context& context, 
+                                        std::error_code& ec)
         {
             return visit_begin_object(tag, context, ec);
         }
 
         virtual bool visit_end_object(const ser_context& context, 
-                                   std::error_code& ec) = 0;
+                                      std::error_code& ec) = 0;
 
         virtual bool visit_begin_array(semantic_tag tag, 
-                                    const ser_context& context, 
-                                    std::error_code& ec) = 0;
+                                       const ser_context& context, 
+                                       std::error_code& ec) = 0;
 
         virtual bool visit_begin_array(std::size_t /*length*/, 
-                                    semantic_tag tag, 
-                                    const ser_context& context, 
-                                    std::error_code& ec)
+                                       semantic_tag tag, 
+                                       const ser_context& context, 
+                                       std::error_code& ec)
         {
             return visit_begin_array(tag, context, ec);
         }
 
         virtual bool visit_end_array(const ser_context& context, 
-                                  std::error_code& ec) = 0;
+                                     std::error_code& ec) = 0;
 
         virtual bool visit_null(semantic_tag tag, 
                              const ser_context& context, 
@@ -1094,13 +1094,13 @@ namespace jsoncons {
                 switch (tag)
                 {
                     case semantic_tag::base64:
-                        to_base64(value.begin(), value.end(), key_);
+                        encode_base64(value.begin(), value.end(), key_);
                         break;
                     case semantic_tag::base16:
-                        to_base16(value.begin(), value.end(),key_);
+                        encode_base16(value.begin(), value.end(),key_);
                         break;
                     default:
-                        to_base64url(value.begin(), value.end(),key_);
+                        encode_base64url(value.begin(), value.end(),key_);
                         break;
                 }
             }
@@ -1159,7 +1159,7 @@ namespace jsoncons {
             if (level_stack_.back().is_key() || level_stack_.back().target() == target_t::buffer)
             {
                 key_.clear();
-                to_base64url(value.begin(), value.end(),key_);
+                encode_base64url(value.begin(), value.end(),key_);
             }
 
             if (level_stack_.back().is_key())
@@ -1736,6 +1736,15 @@ namespace jsoncons {
             return parse_more_;
         }
 
+        bool visit_begin_object(std::size_t, semantic_tag, const ser_context&, std::error_code& ec) override
+        {
+            if (ec_)
+            {
+                ec = ec_;
+            }
+            return parse_more_;
+        }
+
         bool visit_end_object(const ser_context&, std::error_code& ec) override
         {
             if (ec_)
@@ -1746,6 +1755,15 @@ namespace jsoncons {
         }
 
         bool visit_begin_array(semantic_tag, const ser_context&, std::error_code& ec) override
+        {
+            if (ec_)
+            {
+                ec = ec_;
+            }
+            return parse_more_;
+        }
+
+        bool visit_begin_array(std::size_t, semantic_tag, const ser_context&, std::error_code& ec) override
         {
             if (ec_)
             {
@@ -1959,7 +1977,7 @@ namespace jsoncons {
             return true;
         }
 
-        bool visit_begin_object(size_t length, semantic_tag, const ser_context&, std::error_code&) override
+        bool visit_begin_object(std::size_t length, semantic_tag, const ser_context&, std::error_code&) override
         {
             std::cout << "visit_begin_object " << length << std::endl; 
             return true;
@@ -1970,7 +1988,14 @@ namespace jsoncons {
             std::cout << "visit_end_object" << std::endl; 
             return true;
         }
-        bool visit_begin_array(size_t length, semantic_tag, const ser_context&, std::error_code&) override
+
+        bool visit_begin_array(semantic_tag, const ser_context&, std::error_code&) override
+        {
+            std::cout << "visit_begin_array" << std::endl;
+            return true;
+        }
+
+        bool visit_begin_array(std::size_t length, semantic_tag, const ser_context&, std::error_code&) override
         {
             std::cout << "visit_begin_array " << length << std::endl; 
             return true;

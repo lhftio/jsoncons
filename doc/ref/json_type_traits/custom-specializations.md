@@ -126,7 +126,7 @@ namespace jsoncons {
     template<class Json>
     struct json_type_traits<Json, ns::book>
     {
-        using allocator_type = typename Json::allocator_type;
+        using allocator_type = Json::allocator_type;
 
         static bool is(const Json& j) noexcept
         {
@@ -158,7 +158,7 @@ To save typing and enhance readability, the jsoncons library defines macros,
 so you could also write
 
 ```c++
-JSONCONS_N_MEMBER_TRAITS(ns::book, author, title, price)
+JSONCONS_ALL_MEMBER_TRAITS(ns::book, author, title, price)
 ```
 
 which expands to the code above.
